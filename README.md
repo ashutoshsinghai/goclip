@@ -19,7 +19,7 @@ Run a background daemon to capture everything you copy, then recall any entry in
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/goclip.git
+git clone https://github.com/ashutoshsinghai/goclip.git
 cd goclip
 go build -o goclip .
 sudo mv goclip /usr/local/bin/   # optional: put it on PATH
@@ -28,7 +28,7 @@ sudo mv goclip /usr/local/bin/   # optional: put it on PATH
 Or install directly with `go install`:
 
 ```bash
-go install github.com/yourusername/goclip@latest
+go install github.com/ashutoshsinghai/goclip@latest
 ```
 
 ## Usage
@@ -51,6 +51,7 @@ goclip pick
 | `goclip pick` | Open the interactive TUI picker |
 | `goclip list` | Print history as a plain text table |
 | `goclip copy <id>` | Put a historical entry back on the clipboard |
+| `goclip pin <id>` | Pin/unpin an entry (pinned items stay at the top) |
 | `goclip clear` | Wipe all saved history |
 | `goclip help` | Show usage |
 
@@ -61,6 +62,7 @@ goclip pick
 | `↑` / `k` | Move up |
 | `↓` / `j` | Move down |
 | `Enter` | Copy selected entry |
+| `p` | Pin / unpin selected entry |
 | `/` | Enter search mode |
 | `Esc` | Exit search / quit |
 | `q` | Quit |
