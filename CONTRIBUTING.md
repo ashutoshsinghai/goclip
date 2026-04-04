@@ -10,7 +10,7 @@ Thanks for your interest in contributing. Here is everything you need to get sta
 ## Getting the code
 
 ```bash
-git clone https://github.com/yourusername/goclip.git
+git clone https://github.com/ashutoshsinghai/goclip.git
 cd goclip
 go mod download
 ```
