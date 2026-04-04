@@ -49,50 +49,50 @@ func RunDaemon() {
 // StartDaemon spawns the daemon as a background process.
 func StartDaemon() {
 	if pid, alive := readPID(); alive {
-		fmt.Printf("Daemon is already running (PID %d)\n", pid)
+		fmt.Println(yellow.Render("Daemon is already running") + dim.Render(fmt.Sprintf(" (PID %d)", pid)))
 		return
 	}
 
 	pid, err := spawnBackground()
 	if err != nil {
-		fmt.Printf("Failed to start daemon: %v\n", err)
+		fmt.Println(red.Render("Failed to start daemon: ") + err.Error())
 		os.Exit(1)
 	}
 
 	os.WriteFile(pidFile(), []byte(strconv.Itoa(pid)), 0644)
-	fmt.Printf("Daemon started (PID %d)\n", pid)
-	fmt.Printf("Logs:  %s\n", daemonLogFile())
-	fmt.Printf("Stop:  goclip daemon stop\n")
+	fmt.Println(green.Render("Daemon started") + dim.Render(fmt.Sprintf(" (PID %d)", pid)))
+	fmt.Println(dim.Render("Logs:  " + daemonLogFile()))
+	fmt.Println(dim.Render("Stop:  goclip stop"))
 }
 
 // StopDaemon kills the running background daemon.
 func StopDaemon() {
 	pid, alive := readPID()
 	if !alive {
-		fmt.Println("Daemon is not running.")
-		os.Remove(pidFile()) // clean up stale PID file if any
+		fmt.Println(yellow.Render("Daemon is not running."))
+		os.Remove(pidFile())
 		return
 	}
 
 	if err := killProcess(pid); err != nil {
-		fmt.Printf("Failed to stop daemon: %v\n", err)
+		fmt.Println(red.Render("Failed to stop daemon: ") + err.Error())
 		os.Exit(1)
 	}
 
 	os.Remove(pidFile())
-	fmt.Printf("Daemon stopped (PID %d)\n", pid)
+	fmt.Println(yellow.Render("Daemon stopped") + dim.Render(fmt.Sprintf(" (PID %d)", pid)))
 }
 
 // DaemonStatus reports whether the background daemon is running.
 func DaemonStatus() {
 	pid, alive := readPID()
 	if alive {
-		fmt.Printf("Daemon is running (PID %d)\n", pid)
-		fmt.Printf("Logs: %s\n", daemonLogFile())
+		fmt.Println(green.Render("● Daemon is running") + dim.Render(fmt.Sprintf(" (PID %d)", pid)))
+		fmt.Println(dim.Render("  Logs: " + daemonLogFile()))
+		fmt.Println(dim.Render("  Stop: goclip stop"))
 	} else {
-		fmt.Println("Daemon is not running.")
-		fmt.Println("Run `goclip daemon start` to start it in the background.")
-		fmt.Println("Run `goclip daemon` to start it in the foreground.")
+		fmt.Println(red.Render("○ Daemon is not running"))
+		fmt.Println(dim.Render("  Start: goclip daemon"))
 	}
 }
 

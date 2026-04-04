@@ -14,17 +14,31 @@ import (
 func ListClips() {
 	clips := storage.Load()
 	if len(clips) == 0 {
-		fmt.Println("No clipboard history yet. Run: goclip daemon")
+		fmt.Println(yellow.Render("No clipboard history yet.") + dim.Render(" Run: goclip daemon"))
 		return
 	}
-	fmt.Printf("\n%-5s  %-17s  %s\n", "ID", "TIME", "CONTENT")
-	fmt.Println(strings.Repeat("-", 80))
+	fmt.Println()
+	fmt.Printf("%-5s  %-17s  %s\n",
+		bold.Render("ID"),
+		bold.Render("TIME"),
+		bold.Render("CONTENT"),
+	)
+	fmt.Println(dim.Render(strings.Repeat("─", 80)))
 	for _, c := range clips {
 		preview := strings.ReplaceAll(c.Content, "\n", "↵")
 		if len(preview) > 55 {
 			preview = preview[:55] + "..."
 		}
-		fmt.Printf("%-5d  %-17s  %s\n", c.ID, c.CopiedAt.Format("Jan 02 15:04:05"), preview)
+		pin := "  "
+		if c.Pinned {
+			pin = yellow.Render("★ ")
+		}
+		fmt.Printf("%-5d  %-17s  %s%s\n",
+			c.ID,
+			dim.Render(c.CopiedAt.Format("Jan 02 15:04:05")),
+			pin,
+			preview,
+		)
 	}
 	fmt.Println()
 }
@@ -33,7 +47,7 @@ func ListClips() {
 func CopyClip(idStr string) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		fmt.Println("error: ID must be a number, e.g. goclip copy 3")
+		fmt.Println(red.Render("Error: ") + "ID must be a number, e.g. goclip copy 3")
 		os.Exit(1)
 	}
 	clips := storage.Load()
@@ -44,17 +58,17 @@ func CopyClip(idStr string) {
 			if len(preview) > 60 {
 				preview = preview[:60] + "..."
 			}
-			fmt.Printf("Copied: %s\n", preview)
+			fmt.Println(green.Render("Copied: ") + preview)
 			return
 		}
 	}
-	fmt.Printf("No clip found with ID %d\n", id)
+	fmt.Println(red.Render(fmt.Sprintf("No clip found with ID %d", id)))
 }
 
 // ClearHistory wipes all saved clipboard history.
 func ClearHistory() {
 	storage.Save([]storage.Clip{})
-	fmt.Println("History cleared.")
+	fmt.Println(yellow.Render("History cleared."))
 }
 
 // SearchClips prints all clips whose content contains the query.
@@ -70,39 +84,49 @@ func SearchClips(query string) {
 	}
 
 	if len(matches) == 0 {
-		fmt.Printf("No results for %q\n", query)
+		fmt.Println(yellow.Render("No results for ") + bold.Render(fmt.Sprintf("%q", query)))
 		return
 	}
 
-	fmt.Printf("\n%-5s  %-17s  %s\n", "ID", "TIME", "CONTENT")
-	fmt.Println(strings.Repeat("-", 80))
+	fmt.Println()
+	fmt.Printf("%-5s  %-17s  %s\n",
+		bold.Render("ID"),
+		bold.Render("TIME"),
+		bold.Render("CONTENT"),
+	)
+	fmt.Println(dim.Render(strings.Repeat("─", 80)))
 	for _, c := range matches {
 		preview := strings.ReplaceAll(c.Content, "\n", "↵")
 		if len(preview) > 55 {
 			preview = preview[:55] + "..."
 		}
-		pin := ""
+		pin := "  "
 		if c.Pinned {
-			pin = "★ "
+			pin = yellow.Render("★ ")
 		}
-		fmt.Printf("%-5d  %-17s  %s%s\n", c.ID, c.CopiedAt.Format("Jan 02 15:04:05"), pin, preview)
+		fmt.Printf("%-5d  %-17s  %s%s\n",
+			c.ID,
+			dim.Render(c.CopiedAt.Format("Jan 02 15:04:05")),
+			pin,
+			preview,
+		)
 	}
-	fmt.Printf("\n%d result(s) for %q\n\n", len(matches), query)
+	fmt.Printf("\n%s\n\n", dim.Render(fmt.Sprintf("%d result(s) for %q", len(matches), query)))
 }
 
 // PinClip toggles the pin on a clip by ID.
 func PinClip(idStr string) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		fmt.Println("error: ID must be a number, e.g. goclip pin 3")
+		fmt.Println(red.Render("Error: ") + "ID must be a number, e.g. goclip pin 3")
 		os.Exit(1)
 	}
 	clips := storage.Load()
 	clips, pinned := storage.TogglePin(id, clips)
 	if pinned {
-		fmt.Printf("Pinned clip #%d\n", id)
+		fmt.Println(yellow.Render("★ Pinned ") + dim.Render(fmt.Sprintf("clip #%d", id)))
 	} else {
-		fmt.Printf("Unpinned clip #%d\n", id)
+		fmt.Println(dim.Render(fmt.Sprintf("Unpinned clip #%d", id)))
 	}
 	storage.Save(clips)
 }

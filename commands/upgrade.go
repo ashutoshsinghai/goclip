@@ -25,7 +25,7 @@ type githubAsset struct {
 
 // Upgrade fetches the latest release from GitHub and replaces the current binary.
 func Upgrade(currentVersion string) {
-	fmt.Println("Checking for updates...")
+	fmt.Println(dim.Render("Checking for updates..."))
 
 	// Fetch latest release info from GitHub API
 	resp, err := http.Get("https://api.github.com/repos/" + repo + "/releases/latest")
@@ -37,7 +37,7 @@ func Upgrade(currentVersion string) {
 
 	var release githubRelease
 	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		fmt.Printf("Error reading release info: %v\n", err)
+		fmt.Println(red.Render("Error reading release info: ") + err.Error())
 		os.Exit(1)
 	}
 
@@ -45,10 +45,10 @@ func Upgrade(currentVersion string) {
 
 	// Compare versions
 	if currentVersion != "" && currentVersion == latest {
-		fmt.Printf("Already up to date (%s)\n", currentVersion)
+		fmt.Println(green.Render("Already up to date ") + dim.Render("("+currentVersion+")"))
 		return
 	}
-	fmt.Printf("Upgrading %s → %s\n", currentVersion, latest)
+	fmt.Println(bold.Render("Upgrading ") + dim.Render(currentVersion) + bold.Render(" → ") + green.Render(latest))
 
 	// Detect OS and arch
 	goos := runtime.GOOS     // "darwin", "linux", "windows"
@@ -76,7 +76,7 @@ func Upgrade(currentVersion string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Downloading %s...\n", assetName)
+	fmt.Println(dim.Render("Downloading " + assetName + "..."))
 
 	// Download the archive to a temp file
 	tmpDir, _ := os.MkdirTemp("", "goclip-upgrade")
@@ -129,7 +129,7 @@ func Upgrade(currentVersion string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Done! goclip upgraded to %s\n", latest)
+	fmt.Println(green.Render("Done! goclip upgraded to ") + bold.Render(latest))
 }
 
 // downloadFile downloads a URL to a local file.
