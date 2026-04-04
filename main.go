@@ -17,6 +17,10 @@ import (
 	"github.com/ashutoshsinghai/goclip/ui"
 )
 
+// version is set at build time via goreleaser ldflags.
+// Falls back to "dev" when built locally with `go build`.
+var version = "dev"
+
 func main() {
 	if len(os.Args) < 2 {
 		ui.RunPicker()
@@ -50,6 +54,10 @@ func main() {
 		commands.PinClip(os.Args[2])
 	case "clear":
 		commands.ClearHistory()
+	case "upgrade":
+		commands.Upgrade(version)
+	case "version", "--version", "-v":
+		fmt.Println("goclip", version)
 	case "help", "--help", "-h":
 		printHelp()
 	default:
@@ -71,6 +79,8 @@ USAGE:
   goclip copy <id>     Copy item by ID (non-interactive)
   goclip pin <id>      Pin/unpin an item (pinned items stay at top)
   goclip clear         Wipe all history
+  goclip upgrade       Upgrade goclip to the latest version
+  goclip version       Show current version
 
 TYPICAL WORKFLOW:
   1. goclip daemon     # run once in a background tab

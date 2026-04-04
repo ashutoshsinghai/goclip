@@ -9,6 +9,8 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0       # static binary — no system dependencies
+    ldflags:
+      - -s -w -X main.version={{.Tag}}
     goos:
       - darwin
       - linux
