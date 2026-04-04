@@ -56,6 +56,12 @@ var (
 )
 
 // -----------------------------------------------------------------------
+// Custom Messages
+// -----------------------------------------------------------------------
+
+type copiedMsg struct{}
+
+// -----------------------------------------------------------------------
 // Model
 // -----------------------------------------------------------------------
 
@@ -95,8 +101,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		return m, nil
-	case tea.TickMsg:
-		// Auto-quit 500ms after copying
+	case copiedMsg:
+		// Auto-quit after copy timer fires
 		if m.copied {
 			return m, tea.Quit
 		}
@@ -133,7 +139,7 @@ func (m model) handleBrowseKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.copiedText = m.filtered[m.cursor].Content
 			// Auto-quit after 500ms
 			return m, tea.Tick(time.Duration(500)*time.Millisecond, func(t time.Time) tea.Msg {
-				return tea.TickMsg{}
+				return copiedMsg{}
 			})
 		}
 	case "/":
