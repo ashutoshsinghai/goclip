@@ -56,6 +56,8 @@ func main() {
 		commands.ClearHistory()
 	case "upgrade":
 		commands.Upgrade(version)
+	case "uninstall":
+		commands.Uninstall()
 	case "version", "--version", "-v":
 		fmt.Println("goclip", version)
 	case "help", "--help", "-h":
@@ -80,6 +82,7 @@ USAGE:
   goclip pin <id>      Pin/unpin an item (pinned items stay at top)
   goclip clear         Wipe all history
   goclip upgrade       Upgrade goclip to the latest version
+  goclip uninstall     Remove goclip from your system
   goclip version       Show current version
 
 TYPICAL WORKFLOW:
