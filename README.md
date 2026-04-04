@@ -18,14 +18,23 @@ Run a background daemon to capture everything you copy, then recall any entry in
 
 ## Installation
 
+### Option 1 — Install script (recommended, no Go needed)
+
 ```bash
-git clone https://github.com/ashutoshsinghai/goclip.git
-cd goclip
-go build -o goclip .
-sudo mv goclip /usr/local/bin/   # optional: put it on PATH
+curl -sSL https://raw.githubusercontent.com/ashutoshsinghai/goclip/main/install.sh | sh
 ```
 
-Or install directly with `go install`:
+### Option 2 — Homebrew
+
+```bash
+brew install ashutoshsinghai/goclip/goclip
+```
+
+### Option 3 — Download binary manually
+
+Grab the latest binary for your platform from [GitHub Releases](https://github.com/ashutoshsinghai/goclip/releases), extract it, and move it to your PATH.
+
+### Option 4 — Build from source (requires Go 1.21+)
 
 ```bash
 go install github.com/ashutoshsinghai/goclip@latest

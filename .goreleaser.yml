@@ -1,0 +1,51 @@
+version: 2
+
+project_name: goclip
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0       # static binary — no system dependencies
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64               # Intel / x86-64
+      - arm64               # Apple Silicon / ARM servers
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  github:
+    owner: ashutoshsinghai
+    name: goclip
+  name_template: "v{{ .Version }}"
+
+brews:
+  - name: goclip
+    repository:
+      owner: ashutoshsinghai
+      name: goclip
+    directory: Formula
+    homepage: https://github.com/ashutoshsinghai/goclip
+    description: "Clipboard history manager for the terminal — TUI picker, search, pin"
+    license: MIT
+    install: |
+      bin.install "goclip"
+    test: |
+      system "#{bin}/goclip", "help"
