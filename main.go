@@ -4,16 +4,18 @@ package main
 //
 // This file is intentionally thin — it just routes CLI args to the
 // right package. All real logic lives in:
-//   storage/   — read/write history to disk
-//   ui/        — interactive TUI picker
-//   commands/  — daemon, list, copy, clear
+//   internal/storage/  — read/write history to disk
+//   ui/                — interactive TUI picker
+//   cmd/               — history, clip, upgrade, uninstall
+//   cmd/daemon/        — daemon start/stop/status/run
 
 import (
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/ashutoshsinghai/goclip/commands"
+	"github.com/ashutoshsinghai/goclip/cmd"
+	"github.com/ashutoshsinghai/goclip/cmd/daemon"
 	"github.com/ashutoshsinghai/goclip/ui"
 )
 
@@ -29,41 +31,41 @@ func main() {
 
 	switch os.Args[1] {
 	case "run":
-		commands.RunDaemon() // foreground
+		daemon.RunDaemon()
 	case "daemon":
-		commands.StartDaemon() // background
+		daemon.StartDaemon()
 	case "stop":
-		commands.StopDaemon()
+		daemon.StopDaemon()
 	case "status":
-		commands.DaemonStatus()
+		daemon.DaemonStatus()
 	case "pick", "ui":
 		ui.RunPicker()
 	case "list", "ls":
-		commands.ListClips()
+		cmd.ListClips()
 	case "search", "find":
 		if len(os.Args) < 3 {
 			fmt.Println("Usage: goclip search <keyword>")
 			os.Exit(1)
 		}
-		commands.SearchClips(strings.Join(os.Args[2:], " "))
+		cmd.SearchClips(strings.Join(os.Args[2:], " "))
 	case "copy", "get":
 		if len(os.Args) < 3 {
 			fmt.Println("Usage: goclip copy <id>")
 			os.Exit(1)
 		}
-		commands.CopyClip(os.Args[2])
+		cmd.CopyClip(os.Args[2])
 	case "pin":
 		if len(os.Args) < 3 {
 			fmt.Println("Usage: goclip pin <id>")
 			os.Exit(1)
 		}
-		commands.PinClip(os.Args[2])
+		cmd.PinClip(os.Args[2])
 	case "clear":
-		commands.ClearHistory()
+		cmd.ClearHistory()
 	case "upgrade":
-		commands.Upgrade(version)
+		cmd.Upgrade(version)
 	case "uninstall":
-		commands.Uninstall()
+		cmd.Uninstall()
 	case "version", "--version", "-v":
 		fmt.Println("goclip", version)
 	case "help", "--help", "-h":

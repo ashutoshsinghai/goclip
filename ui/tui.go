@@ -8,7 +8,7 @@ import (
 	"github.com/atotto/clipboard"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/ashutoshsinghai/goclip/storage"
+	"github.com/ashutoshsinghai/goclip/internal/storage"
 )
 
 // -----------------------------------------------------------------------

@@ -1,26 +1,27 @@
-package commands
+package cmd
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/ashutoshsinghai/goclip/storage"
+	"github.com/ashutoshsinghai/goclip/internal/storage"
+	"github.com/ashutoshsinghai/goclip/internal/style"
 )
 
 // ListClips prints all clipboard history as a plain text table.
 func ListClips() {
 	clips := storage.Load()
 	if len(clips) == 0 {
-		fmt.Println(yellow.Render("No clipboard history yet.") + dim.Render(" Run: goclip daemon"))
+		fmt.Println(style.Yellow.Render("No clipboard history yet.") + style.Dim.Render(" Run: goclip daemon"))
 		return
 	}
 	fmt.Println()
 	fmt.Printf("%-5s  %-17s  %s\n",
-		bold.Render("ID"),
-		bold.Render("TIME"),
-		bold.Render("CONTENT"),
+		style.Bold.Render("ID"),
+		style.Bold.Render("TIME"),
+		style.Bold.Render("CONTENT"),
 	)
-	fmt.Println(dim.Render(strings.Repeat("─", 80)))
+	fmt.Println(style.Dim.Render(strings.Repeat("─", 80)))
 	for _, c := range clips {
 		printClipRow(c)
 	}
@@ -40,21 +41,21 @@ func SearchClips(query string) {
 	}
 
 	if len(matches) == 0 {
-		fmt.Println(yellow.Render("No results for ") + bold.Render(fmt.Sprintf("%q", query)))
+		fmt.Println(style.Yellow.Render("No results for ") + style.Bold.Render(fmt.Sprintf("%q", query)))
 		return
 	}
 
 	fmt.Println()
 	fmt.Printf("%-5s  %-17s  %s\n",
-		bold.Render("ID"),
-		bold.Render("TIME"),
-		bold.Render("CONTENT"),
+		style.Bold.Render("ID"),
+		style.Bold.Render("TIME"),
+		style.Bold.Render("CONTENT"),
 	)
-	fmt.Println(dim.Render(strings.Repeat("─", 80)))
+	fmt.Println(style.Dim.Render(strings.Repeat("─", 80)))
 	for _, c := range matches {
 		printClipRow(c)
 	}
-	fmt.Printf("\n%s\n\n", dim.Render(fmt.Sprintf("%d result(s) for %q", len(matches), query)))
+	fmt.Printf("\n%s\n\n", style.Dim.Render(fmt.Sprintf("%d result(s) for %q", len(matches), query)))
 }
 
 // printClipRow prints a single clip as a table row.
@@ -65,11 +66,11 @@ func printClipRow(c storage.Clip) {
 	}
 	pin := "  "
 	if c.Pinned {
-		pin = yellow.Render("★ ")
+		pin = style.Yellow.Render("★ ")
 	}
 	fmt.Printf("%-5d  %-17s  %s%s\n",
 		c.ID,
-		dim.Render(c.CopiedAt.Format("Jan 02 15:04:05")),
+		style.Dim.Render(c.CopiedAt.Format("Jan 02 15:04:05")),
 		pin,
 		preview,
 	)

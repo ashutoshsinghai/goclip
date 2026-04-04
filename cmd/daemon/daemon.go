@@ -1,4 +1,4 @@
-package commands
+package daemon
 
 import (
 	"fmt"
@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"github.com/atotto/clipboard"
-	"github.com/ashutoshsinghai/goclip/storage"
+	"github.com/ashutoshsinghai/goclip/internal/storage"
+	"github.com/ashutoshsinghai/goclip/internal/style"
 )
 
 func pidFile() string {
@@ -49,50 +50,50 @@ func RunDaemon() {
 // StartDaemon spawns the daemon as a background process.
 func StartDaemon() {
 	if pid, alive := readPID(); alive {
-		fmt.Println(yellow.Render("Daemon is already running") + dim.Render(fmt.Sprintf(" (PID %d)", pid)))
+		fmt.Println(style.Yellow.Render("Daemon is already running") + style.Dim.Render(fmt.Sprintf(" (PID %d)", pid)))
 		return
 	}
 
 	pid, err := spawnBackground()
 	if err != nil {
-		fmt.Println(red.Render("Failed to start daemon: ") + err.Error())
+		fmt.Println(style.Red.Render("Failed to start daemon: ") + err.Error())
 		os.Exit(1)
 	}
 
 	os.WriteFile(pidFile(), []byte(strconv.Itoa(pid)), 0644)
-	fmt.Println(green.Render("Daemon started") + dim.Render(fmt.Sprintf(" (PID %d)", pid)))
-	fmt.Println(dim.Render("Logs:  " + daemonLogFile()))
-	fmt.Println(dim.Render("Stop:  goclip stop"))
+	fmt.Println(style.Green.Render("Daemon started") + style.Dim.Render(fmt.Sprintf(" (PID %d)", pid)))
+	fmt.Println(style.Dim.Render("Logs:  " + daemonLogFile()))
+	fmt.Println(style.Dim.Render("Stop:  goclip stop"))
 }
 
 // StopDaemon kills the running background daemon.
 func StopDaemon() {
 	pid, alive := readPID()
 	if !alive {
-		fmt.Println(yellow.Render("Daemon is not running."))
+		fmt.Println(style.Yellow.Render("Daemon is not running."))
 		os.Remove(pidFile())
 		return
 	}
 
 	if err := killProcess(pid); err != nil {
-		fmt.Println(red.Render("Failed to stop daemon: ") + err.Error())
+		fmt.Println(style.Red.Render("Failed to stop daemon: ") + err.Error())
 		os.Exit(1)
 	}
 
 	os.Remove(pidFile())
-	fmt.Println(yellow.Render("Daemon stopped") + dim.Render(fmt.Sprintf(" (PID %d)", pid)))
+	fmt.Println(style.Yellow.Render("Daemon stopped") + style.Dim.Render(fmt.Sprintf(" (PID %d)", pid)))
 }
 
 // DaemonStatus reports whether the background daemon is running.
 func DaemonStatus() {
 	pid, alive := readPID()
 	if alive {
-		fmt.Println(green.Render("● Daemon is running") + dim.Render(fmt.Sprintf(" (PID %d)", pid)))
-		fmt.Println(dim.Render("  Logs: " + daemonLogFile()))
-		fmt.Println(dim.Render("  Stop: goclip stop"))
+		fmt.Println(style.Green.Render("● Daemon is running") + style.Dim.Render(fmt.Sprintf(" (PID %d)", pid)))
+		fmt.Println(style.Dim.Render("  Logs: " + daemonLogFile()))
+		fmt.Println(style.Dim.Render("  Stop: goclip stop"))
 	} else {
-		fmt.Println(red.Render("○ Daemon is not running"))
-		fmt.Println(dim.Render("  Start: goclip daemon"))
+		fmt.Println(style.Red.Render("○ Daemon is not running"))
+		fmt.Println(style.Dim.Render("  Start: goclip daemon"))
 	}
 }
 

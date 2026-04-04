@@ -1,4 +1,4 @@
-package commands
+package cmd
 
 import (
 	"encoding/json"
@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/ashutoshsinghai/goclip/internal/style"
 )
 
 const repo = "ashutoshsinghai/goclip"
@@ -25,7 +27,7 @@ type githubAsset struct {
 
 // Upgrade fetches the latest release from GitHub and replaces the current binary.
 func Upgrade(currentVersion string) {
-	fmt.Println(dim.Render("Checking for updates..."))
+	fmt.Println(style.Dim.Render("Checking for updates..."))
 
 	// Fetch latest release info from GitHub API
 	resp, err := http.Get("https://api.github.com/repos/" + repo + "/releases/latest")
@@ -37,7 +39,7 @@ func Upgrade(currentVersion string) {
 
 	var release githubRelease
 	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		fmt.Println(red.Render("Error reading release info: ") + err.Error())
+		fmt.Println(style.Red.Render("Error reading release info: ") + err.Error())
 		os.Exit(1)
 	}
 
@@ -45,10 +47,10 @@ func Upgrade(currentVersion string) {
 
 	// Compare versions
 	if currentVersion != "" && currentVersion == latest {
-		fmt.Println(green.Render("Already up to date ") + dim.Render("("+currentVersion+")"))
+		fmt.Println(style.Green.Render("Already up to date ") + style.Dim.Render("("+currentVersion+")"))
 		return
 	}
-	fmt.Println(bold.Render("Upgrading ") + dim.Render(currentVersion) + bold.Render(" → ") + green.Render(latest))
+	fmt.Println(style.Bold.Render("Upgrading ") + style.Dim.Render(currentVersion) + style.Bold.Render(" → ") + style.Green.Render(latest))
 
 	// Detect OS and arch
 	goos := runtime.GOOS     // "darwin", "linux", "windows"
@@ -76,7 +78,7 @@ func Upgrade(currentVersion string) {
 		os.Exit(1)
 	}
 
-	fmt.Println(dim.Render("Downloading " + assetName + "..."))
+	fmt.Println(style.Dim.Render("Downloading " + assetName + "..."))
 
 	// Download the archive to a temp file
 	tmpDir, _ := os.MkdirTemp("", "goclip-upgrade")
@@ -129,7 +131,7 @@ func Upgrade(currentVersion string) {
 		os.Exit(1)
 	}
 
-	fmt.Println(green.Render("Done! goclip upgraded to ") + bold.Render(latest))
+	fmt.Println(style.Green.Render("Done! goclip upgraded to ") + style.Bold.Render(latest))
 }
 
 // downloadFile downloads a URL to a local file.

@@ -240,24 +240,27 @@ systemctl --user enable --now goclip
 
 ```
 goclip/
-├── main.go            # CLI entry point and argument routing
-├── commands/
-│   ├── colors.go          # shared terminal styles
-│   ├── daemon.go          # run, daemon, stop, status
-│   ├── daemon_unix.go     # background process handling (macOS/Linux)
-│   ├── daemon_windows.go  # background process handling (Windows)
-│   ├── history.go         # list, search
-│   ├── clip.go            # copy, pin, clear
-│   ├── upgrade.go         # self-upgrade from GitHub Releases
-│   ├── uninstall.go       # self-uninstall
-│   └── extract.go         # tar.gz / zip extraction helpers
-├── storage/
-│   └── storage.go     # Read/write history.json
+├── main.go                    # CLI entry point, argument routing
+├── cmd/
+│   ├── daemon/
+│   │   ├── daemon.go          # run, daemon, stop, status
+│   │   ├── daemon_unix.go     # background process (macOS/Linux)
+│   │   └── daemon_windows.go  # background process (Windows)
+│   ├── history.go             # list, search
+│   ├── clip.go                # copy, pin, clear
+│   ├── upgrade.go             # self-upgrade from GitHub Releases
+│   ├── extract.go             # tar.gz / zip extraction helpers
+│   └── uninstall.go           # self-uninstall
+├── internal/
+│   ├── storage/
+│   │   └── storage.go         # read/write history.json
+│   └── style/
+│       └── style.go           # shared terminal styles
 ├── ui/
-│   └── tui.go         # Bubbletea TUI picker
+│   └── tui.go                 # Bubbletea TUI picker
 └── scripts/
-    ├── install.sh     # Installer for macOS/Linux
-    └── install.ps1    # Installer for Windows (PowerShell)
+    ├── install.sh             # installer for macOS/Linux
+    └── install.ps1            # installer for Windows (PowerShell)
 ```
 
 ## Contributing

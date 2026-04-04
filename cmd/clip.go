@@ -1,4 +1,4 @@
-package commands
+package cmd
 
 import (
 	"fmt"
@@ -6,14 +6,15 @@ import (
 	"strconv"
 
 	"github.com/atotto/clipboard"
-	"github.com/ashutoshsinghai/goclip/storage"
+	"github.com/ashutoshsinghai/goclip/internal/storage"
+	"github.com/ashutoshsinghai/goclip/internal/style"
 )
 
 // CopyClip puts a historical clip back on the clipboard by its ID.
 func CopyClip(idStr string) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		fmt.Println(red.Render("Error: ") + "ID must be a number, e.g. goclip copy 3")
+		fmt.Println(style.Red.Render("Error: ") + "ID must be a number, e.g. goclip copy 3")
 		os.Exit(1)
 	}
 	clips := storage.Load()
@@ -24,26 +25,26 @@ func CopyClip(idStr string) {
 			if len(preview) > 60 {
 				preview = preview[:60] + "..."
 			}
-			fmt.Println(green.Render("Copied: ") + preview)
+			fmt.Println(style.Green.Render("Copied: ") + preview)
 			return
 		}
 	}
-	fmt.Println(red.Render(fmt.Sprintf("No clip found with ID %d", id)))
+	fmt.Println(style.Red.Render(fmt.Sprintf("No clip found with ID %d", id)))
 }
 
 // PinClip toggles the pin on a clip by ID.
 func PinClip(idStr string) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		fmt.Println(red.Render("Error: ") + "ID must be a number, e.g. goclip pin 3")
+		fmt.Println(style.Red.Render("Error: ") + "ID must be a number, e.g. goclip pin 3")
 		os.Exit(1)
 	}
 	clips := storage.Load()
 	clips, pinned := storage.TogglePin(id, clips)
 	if pinned {
-		fmt.Println(yellow.Render("★ Pinned ") + dim.Render(fmt.Sprintf("clip #%d", id)))
+		fmt.Println(style.Yellow.Render("★ Pinned ") + style.Dim.Render(fmt.Sprintf("clip #%d", id)))
 	} else {
-		fmt.Println(dim.Render(fmt.Sprintf("Unpinned clip #%d", id)))
+		fmt.Println(style.Dim.Render(fmt.Sprintf("Unpinned clip #%d", id)))
 	}
 	storage.Save(clips)
 }
@@ -51,5 +52,5 @@ func PinClip(idStr string) {
 // ClearHistory wipes all saved clipboard history.
 func ClearHistory() {
 	storage.Save([]storage.Clip{})
-	fmt.Println(yellow.Render("History cleared."))
+	fmt.Println(style.Yellow.Render("History cleared."))
 }

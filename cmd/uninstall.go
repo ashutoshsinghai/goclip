@@ -1,4 +1,4 @@
-package commands
+package cmd
 
 import (
 	"bufio"
@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
 )
 
 // Uninstall removes the goclip binary and optionally the history directory.
