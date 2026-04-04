@@ -81,7 +81,7 @@ go install github.com/ashutoshsinghai/goclip@latest
 ### Typical workflow
 
 ```bash
-# 1. Start the daemon in a background terminal tab
+# 1. Start the daemon in the background
 goclip daemon
 
 # 2. Open the interactive picker whenever you need an old clip
@@ -92,7 +92,10 @@ goclip pick
 
 | Command | Description |
 |---|---|
-| `goclip daemon` | Start watching the clipboard |
+| `goclip daemon` | Start clipboard watcher in background |
+| `goclip stop` | Stop background daemon |
+| `goclip status` | Show whether daemon is running |
+| `goclip run` | Run clipboard watcher in foreground |
 | `goclip pick` | Open the interactive TUI picker |
 | `goclip list` | Print history as a plain text table |
 | `goclip search <keyword>` | Search history by keyword |
