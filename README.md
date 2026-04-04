@@ -99,6 +99,8 @@ goclip pick
 | `goclip copy <id>` | Put a historical entry back on the clipboard |
 | `goclip pin <id>` | Pin/unpin an entry (pinned items stay at the top) |
 | `goclip clear` | Wipe all saved history |
+| `goclip upgrade` | Upgrade to the latest version |
+| `goclip version` | Show current version |
 | `goclip help` | Show usage |
 
 ### TUI keybindings
@@ -112,6 +114,47 @@ goclip pick
 | `/` | Enter search mode |
 | `Esc` | Exit search mode |
 | `q` | Quit |
+
+## Upgrading
+
+```bash
+goclip upgrade
+```
+
+Detects your OS and architecture, downloads the latest binary from GitHub Releases, and replaces the current binary in-place. No need to re-run the install script.
+
+---
+
+## Uninstalling
+
+### macOS / Linux
+
+```bash
+rm $(which goclip)       # remove the binary
+rm -rf ~/.goclip         # remove saved history (optional)
+```
+
+### Windows — PowerShell
+
+```powershell
+Remove-Item "$env:USERPROFILE\bin\goclip.exe"
+Remove-Item -Recurse "$env:USERPROFILE\.goclip"   # optional: remove history
+```
+
+### Windows — Command Prompt
+
+```cmd
+del %USERPROFILE%\bin\goclip.exe
+rmdir /s %USERPROFILE%\.goclip
+```
+
+---
+
+## Reinstalling
+
+Just run the install command for your platform again — it will overwrite the existing binary.
+
+---
 
 ## Storage
 
@@ -175,7 +218,9 @@ goclip/
 ├── main.go            # CLI entry point and argument routing
 ├── commands/
 │   ├── daemon.go      # Clipboard polling loop
-│   └── list.go        # list, copy, pin, clear subcommands
+│   ├── list.go        # list, search, copy, pin, clear subcommands
+│   ├── upgrade.go     # Self-upgrade from GitHub Releases
+│   └── extract.go     # tar.gz / zip extraction helpers
 ├── storage/
 │   └── storage.go     # Read/write history.json
 ├── ui/
