@@ -14,17 +14,63 @@ Run a background daemon to capture everything you copy, then recall any entry in
 
 ## Installation
 
-### Option 1 — Install script (no Go needed)
+### macOS / Linux
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ashutoshsinghai/goclip/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/ashutoshsinghai/goclip/main/scripts/install.sh | sh
 ```
 
-### Option 2 — Download binary manually
+Installs to `/usr/local/bin` (or `~/bin` if no write access). Works on Intel and Apple Silicon.
 
-Grab the latest binary for your platform from [GitHub Releases](https://github.com/ashutoshsinghai/goclip/releases), extract it, and move it to your PATH.
+---
 
-### Option 3 — Build from source (requires Go 1.21+)
+### Windows — PowerShell
+
+```powershell
+irm https://raw.githubusercontent.com/ashutoshsinghai/goclip/main/scripts/install.ps1 | iex
+```
+
+Installs to `%USERPROFILE%\bin` and adds it to your PATH automatically. No admin needed.
+
+---
+
+### Windows — Command Prompt (cmd.exe)
+
+Windows 10 and 11 have `curl` and `tar` built in. Run these commands:
+
+```cmd
+curl -L -o goclip.zip https://github.com/ashutoshsinghai/goclip/releases/latest/download/goclip_windows_amd64.zip
+tar -xf goclip.zip
+mkdir %USERPROFILE%\bin
+move goclip.exe %USERPROFILE%\bin\
+del goclip.zip
+```
+
+Then add `%USERPROFILE%\bin` to your PATH:
+
+```cmd
+setx PATH "%PATH%;%USERPROFILE%\bin"
+```
+
+Restart your terminal and run `goclip help` to verify.
+
+---
+
+### Manual download (any platform)
+
+Download the right binary for your OS from [GitHub Releases](https://github.com/ashutoshsinghai/goclip/releases), extract it, and move it somewhere on your PATH.
+
+| OS | File |
+|---|---|
+| macOS Apple Silicon | `goclip_darwin_arm64.tar.gz` |
+| macOS Intel | `goclip_darwin_amd64.tar.gz` |
+| Linux ARM64 | `goclip_linux_arm64.tar.gz` |
+| Linux x86-64 | `goclip_linux_amd64.tar.gz` |
+| Windows x86-64 | `goclip_windows_amd64.zip` |
+
+---
+
+### Build from source (requires Go 1.21+)
 
 ```bash
 go install github.com/ashutoshsinghai/goclip@latest
@@ -131,8 +177,11 @@ goclip/
 │   └── list.go        # list, copy, pin, clear subcommands
 ├── storage/
 │   └── storage.go     # Read/write history.json
-└── ui/
-    └── tui.go         # Bubbletea TUI picker
+├── ui/
+│   └── tui.go         # Bubbletea TUI picker
+└── scripts/
+    ├── install.sh     # Installer for macOS/Linux
+    └── install.ps1    # Installer for Windows (PowerShell)
 ```
 
 ## Contributing
