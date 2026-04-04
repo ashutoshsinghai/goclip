@@ -60,10 +60,18 @@ func AddClip(content string, clips []Clip) []Clip {
 	clip := Clip{ID: newID, Content: content, CopiedAt: time.Now()}
 	clips = append([]Clip{clip}, clips...)
 
-	if len(clips) > MaxHistory {
-		clips = clips[:MaxHistory]
+	// Trim unpinned items to MaxHistory. Pinned items are never removed.
+	unpinned := 0
+	var trimmed []Clip
+	for _, c := range clips {
+		if c.Pinned {
+			trimmed = append(trimmed, c)
+		} else if unpinned < MaxHistory {
+			trimmed = append(trimmed, c)
+			unpinned++
+		}
 	}
-	return clips
+	return trimmed
 }
 
 // TogglePin flips the Pinned flag on the clip with the given ID.
