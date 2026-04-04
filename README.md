@@ -95,6 +95,7 @@ goclip pick
 | `goclip daemon` | Start watching the clipboard |
 | `goclip pick` | Open the interactive TUI picker |
 | `goclip list` | Print history as a plain text table |
+| `goclip search <keyword>` | Search history by keyword |
 | `goclip copy <id>` | Put a historical entry back on the clipboard |
 | `goclip pin <id>` | Pin/unpin an entry (pinned items stay at the top) |
 | `goclip clear` | Wipe all saved history |

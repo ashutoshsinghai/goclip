@@ -57,6 +57,39 @@ func ClearHistory() {
 	fmt.Println("History cleared.")
 }
 
+// SearchClips prints all clips whose content contains the query.
+func SearchClips(query string) {
+	clips := storage.Load()
+	q := strings.ToLower(query)
+
+	var matches []storage.Clip
+	for _, c := range clips {
+		if strings.Contains(strings.ToLower(c.Content), q) {
+			matches = append(matches, c)
+		}
+	}
+
+	if len(matches) == 0 {
+		fmt.Printf("No results for %q\n", query)
+		return
+	}
+
+	fmt.Printf("\n%-5s  %-17s  %s\n", "ID", "TIME", "CONTENT")
+	fmt.Println(strings.Repeat("-", 80))
+	for _, c := range matches {
+		preview := strings.ReplaceAll(c.Content, "\n", "↵")
+		if len(preview) > 55 {
+			preview = preview[:55] + "..."
+		}
+		pin := ""
+		if c.Pinned {
+			pin = "★ "
+		}
+		fmt.Printf("%-5d  %-17s  %s%s\n", c.ID, c.CopiedAt.Format("Jan 02 15:04:05"), pin, preview)
+	}
+	fmt.Printf("\n%d result(s) for %q\n\n", len(matches), query)
+}
+
 // PinClip toggles the pin on a clip by ID.
 func PinClip(idStr string) {
 	id, err := strconv.Atoi(idStr)

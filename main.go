@@ -11,6 +11,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/ashutoshsinghai/goclip/commands"
 	"github.com/ashutoshsinghai/goclip/ui"
@@ -29,6 +30,12 @@ func main() {
 		ui.RunPicker()
 	case "list", "ls":
 		commands.ListClips()
+	case "search", "find":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: goclip search <keyword>")
+			os.Exit(1)
+		}
+		commands.SearchClips(strings.Join(os.Args[2:], " "))
 	case "copy", "get":
 		if len(os.Args) < 3 {
 			fmt.Println("Usage: goclip copy <id>")
@@ -60,6 +67,7 @@ USAGE:
   goclip daemon        Start watching your clipboard (keep this running)
   goclip pick          Open interactive TUI picker  ← the fun one
   goclip list          Show history as plain text
+  goclip search <kw>   Search history by keyword
   goclip copy <id>     Copy item by ID (non-interactive)
   goclip pin <id>      Pin/unpin an item (pinned items stay at top)
   goclip clear         Wipe all history
