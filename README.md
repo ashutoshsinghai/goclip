@@ -103,6 +103,7 @@ goclip pick
 | `goclip pin <id>` | Pin/unpin an entry (pinned items stay at the top) |
 | `goclip clear` | Wipe all saved history |
 | `goclip upgrade` | Upgrade to the latest version |
+| `goclip uninstall` | Remove goclip from your system |
 | `goclip version` | Show current version |
 | `goclip help` | Show usage |
 
@@ -163,9 +164,30 @@ Just run the install command for your platform again — it will overwrite the e
 
 History is stored at `~/.goclip/history.json`. Plain JSON — you can inspect, back up, or edit it manually.
 
-## Running as a background service
+## Running the daemon
 
-### macOS (launchd)
+### Quick start (background)
+
+```bash
+goclip daemon     # starts in background, detached from terminal
+goclip status     # check it's running
+goclip stop       # stop it
+```
+
+Logs are written to `~/.goclip/daemon.log`:
+```bash
+tail -f ~/.goclip/daemon.log
+```
+
+### Foreground mode (for debugging)
+
+```bash
+goclip run        # runs in terminal, Ctrl+C to stop
+```
+
+### Auto-start on login
+
+#### macOS (launchd)
 
 Create `~/Library/LaunchAgents/com.goclip.daemon.plist`:
 
@@ -180,7 +202,7 @@ Create `~/Library/LaunchAgents/com.goclip.daemon.plist`:
   <key>ProgramArguments</key>
   <array>
     <string>/usr/local/bin/goclip</string>
-    <string>daemon</string>
+    <string>run</string>
   </array>
   <key>RunAtLoad</key>
   <true/>
@@ -194,7 +216,7 @@ Create `~/Library/LaunchAgents/com.goclip.daemon.plist`:
 launchctl load ~/Library/LaunchAgents/com.goclip.daemon.plist
 ```
 
-### Linux (systemd)
+#### Linux (systemd)
 
 Create `~/.config/systemd/user/goclip.service`:
 
@@ -203,7 +225,7 @@ Create `~/.config/systemd/user/goclip.service`:
 Description=goclip clipboard daemon
 
 [Service]
-ExecStart=/usr/local/bin/goclip daemon
+ExecStart=/usr/local/bin/goclip run
 Restart=on-failure
 
 [Install]
@@ -220,10 +242,13 @@ systemctl --user enable --now goclip
 goclip/
 ├── main.go            # CLI entry point and argument routing
 ├── commands/
-│   ├── daemon.go      # Clipboard polling loop
-│   ├── list.go        # list, search, copy, pin, clear subcommands
-│   ├── upgrade.go     # Self-upgrade from GitHub Releases
-│   └── extract.go     # tar.gz / zip extraction helpers
+│   ├── daemon.go          # run, daemon, stop, status
+│   ├── daemon_unix.go     # background process handling (macOS/Linux)
+│   ├── daemon_windows.go  # background process handling (Windows)
+│   ├── list.go            # list, search, copy, pin, clear
+│   ├── upgrade.go         # self-upgrade from GitHub Releases
+│   ├── uninstall.go       # self-uninstall
+│   └── extract.go         # tar.gz / zip extraction helpers
 ├── storage/
 │   └── storage.go     # Read/write history.json
 ├── ui/
