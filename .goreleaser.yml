@@ -36,16 +36,4 @@ release:
     name: goclip
   name_template: "v{{ .Version }}"
 
-brews:
-  - name: goclip
-    repository:
-      owner: ashutoshsinghai
-      name: goclip
-    directory: Formula
-    homepage: https://github.com/ashutoshsinghai/goclip
-    description: "Clipboard history manager for the terminal — TUI picker, search, pin"
-    license: MIT
-    install: |
-      bin.install "goclip"
-    test: |
-      system "#{bin}/goclip", "help"
+# brew formula will be added in a future release

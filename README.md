@@ -2,39 +2,29 @@
 
 A fast, terminal-native clipboard history manager written in Go.
 
-Run a background daemon to capture everything you copy, then recall any entry instantly through a fuzzy-search TUI or plain CLI commands.
+Run a background daemon to capture everything you copy, then recall any entry instantly through a TUI picker or plain CLI commands.
 
 ## Features
 
-- **Daemon** — polls the clipboard every 500 ms and persists entries to `~/.goclip/history.json`
-- **Interactive TUI** — scrollable picker with live fuzzy search, built with [Bubbletea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss)
-- **Non-interactive CLI** — `list`, `copy <id>`, and `clear` for scripting
+- **Daemon** — polls the clipboard every 500ms and persists entries to `~/.goclip/history.json`
+- **Interactive TUI** — scrollable picker with live search and pin support, built with [Bubbletea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss)
+- **Pin items** — keep important clips at the top of your history
+- **Non-interactive CLI** — `list`, `copy <id>`, `pin <id>`, `clear` for scripting
 - **Keeps up to 100 entries**, de-duplicating consecutive identical clips
-
-## Requirements
-
-- Go 1.21+
-- macOS, Linux, or Windows (clipboard access via [`atotto/clipboard`](https://github.com/atotto/clipboard))
 
 ## Installation
 
-### Option 1 — Install script (recommended, no Go needed)
+### Option 1 — Install script (no Go needed)
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/ashutoshsinghai/goclip/main/install.sh | sh
 ```
 
-### Option 2 — Homebrew
-
-```bash
-brew install ashutoshsinghai/goclip/goclip
-```
-
-### Option 3 — Download binary manually
+### Option 2 — Download binary manually
 
 Grab the latest binary for your platform from [GitHub Releases](https://github.com/ashutoshsinghai/goclip/releases), extract it, and move it to your PATH.
 
-### Option 4 — Build from source (requires Go 1.21+)
+### Option 3 — Build from source (requires Go 1.21+)
 
 ```bash
 go install github.com/ashutoshsinghai/goclip@latest
@@ -45,7 +35,7 @@ go install github.com/ashutoshsinghai/goclip@latest
 ### Typical workflow
 
 ```bash
-# 1. Start the daemon (keep this running in a background tab or as a service)
+# 1. Start the daemon in a background terminal tab
 goclip daemon
 
 # 2. Open the interactive picker whenever you need an old clip
@@ -70,15 +60,15 @@ goclip pick
 |---|---|
 | `↑` / `k` | Move up |
 | `↓` / `j` | Move down |
-| `Enter` | Copy selected entry |
+| `Enter` | Copy selected entry and exit |
 | `p` | Pin / unpin selected entry |
 | `/` | Enter search mode |
-| `Esc` | Exit search / quit |
+| `Esc` | Exit search mode |
 | `q` | Quit |
 
 ## Storage
 
-History is stored in `~/.goclip/history.json`. The file is plain JSON — you can inspect, back up, or edit it manually.
+History is stored at `~/.goclip/history.json`. Plain JSON — you can inspect, back up, or edit it manually.
 
 ## Running as a background service
 
@@ -111,7 +101,7 @@ Create `~/Library/LaunchAgents/com.goclip.daemon.plist`:
 launchctl load ~/Library/LaunchAgents/com.goclip.daemon.plist
 ```
 
-### Linux (systemd user service)
+### Linux (systemd)
 
 Create `~/.config/systemd/user/goclip.service`:
 
@@ -138,7 +128,7 @@ goclip/
 ├── main.go            # CLI entry point and argument routing
 ├── commands/
 │   ├── daemon.go      # Clipboard polling loop
-│   └── list.go        # list, copy, clear subcommands
+│   └── list.go        # list, copy, pin, clear subcommands
 ├── storage/
 │   └── storage.go     # Read/write history.json
 └── ui/
@@ -151,4 +141,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT
+MIT — [Ashutosh Singhai](https://github.com/ashutoshsinghai)
