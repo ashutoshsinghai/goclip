@@ -242,10 +242,12 @@ systemctl --user enable --now goclip
 goclip/
 ├── main.go            # CLI entry point and argument routing
 ├── commands/
+│   ├── colors.go          # shared terminal styles
 │   ├── daemon.go          # run, daemon, stop, status
 │   ├── daemon_unix.go     # background process handling (macOS/Linux)
 │   ├── daemon_windows.go  # background process handling (Windows)
-│   ├── list.go            # list, search, copy, pin, clear
+│   ├── history.go         # list, search
+│   ├── clip.go            # copy, pin, clear
 │   ├── upgrade.go         # self-upgrade from GitHub Releases
 │   ├── uninstall.go       # self-uninstall
 │   └── extract.go         # tar.gz / zip extraction helpers
