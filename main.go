@@ -16,6 +16,7 @@ import (
 
 	"github.com/ashutoshsinghai/goclip/cmd"
 	"github.com/ashutoshsinghai/goclip/cmd/daemon"
+	"github.com/ashutoshsinghai/goclip/internal/style"
 	"github.com/ashutoshsinghai/goclip/ui"
 )
 
@@ -71,10 +72,68 @@ func main() {
 	case "help", "--help", "-h":
 		printHelp()
 	default:
-		fmt.Printf("Unknown command: %s\n", os.Args[1])
-		printHelp()
+		if suggestion := suggest(os.Args[1]); suggestion != "" {
+			fmt.Println(style.Red.Render("Unknown command: ") + style.Dim.Render("\"" + os.Args[1] + "\""))
+			fmt.Println(style.Green.Render("✓ Did you mean: ") + style.Bold.Render("goclip " + suggestion) + "?")
+		} else {
+			fmt.Println(style.Red.Render("Unknown command: ") + style.Dim.Render("\"" + os.Args[1] + "\""))
+			fmt.Println(style.Dim.Render("Run ") + style.Bold.Render("goclip help") + style.Dim.Render(" for usage."))
+		}
 		os.Exit(1)
 	}
+}
+
+// known is the full list of valid commands used for fuzzy suggestion.
+var known = []string{
+	"daemon", "stop", "status", "run", "pick",
+	"list", "search", "copy", "pin", "clear",
+	"upgrade", "uninstall", "version", "help",
+}
+
+// suggest returns the closest known command to input, or "" if nothing is close.
+func suggest(input string) string {
+	best, bestDist := "", 4 // only suggest if distance ≤ 3
+	for _, cmd := range known {
+		if d := levenshtein(input, cmd); d < bestDist {
+			best, bestDist = cmd, d
+		}
+	}
+	return best
+}
+
+// levenshtein computes the edit distance between two strings.
+func levenshtein(a, b string) int {
+	la, lb := len(a), len(b)
+	row := make([]int, lb+1)
+	for j := range row {
+		row[j] = j
+	}
+	for i := 1; i <= la; i++ {
+		prev := i
+		for j := 1; j <= lb; j++ {
+			val := row[j-1] // diagonal
+			if a[i-1] != b[j-1] {
+				val = 1 + min3(row[j], prev, row[j-1])
+			}
+			row[j-1] = prev
+			prev = val
+		}
+		row[lb] = prev
+	}
+	return row[lb]
+}
+
+func min3(a, b, c int) int {
+	if a < b {
+		if a < c {
+			return a
+		}
+		return c
+	}
+	if b < c {
+		return b
+	}
+	return c
 }
 
 func printHelp() {

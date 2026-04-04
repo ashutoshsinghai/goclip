@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/atotto/clipboard"
 	"github.com/ashutoshsinghai/goclip/internal/storage"
@@ -51,6 +53,18 @@ func PinClip(idStr string) {
 
 // ClearHistory wipes all saved clipboard history.
 func ClearHistory() {
-	storage.Save([]storage.Clip{})
-	fmt.Println(style.Yellow.Render("History cleared."))
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print(style.Yellow.Render("Are you sure? ") + "This will delete all history. (yes/no): ")
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(strings.ToLower(input))
+
+	if input == "yes" || input == "y" {
+		storage.Save([]storage.Clip{})
+		fmt.Println(style.Yellow.Render("History cleared."))
+	} else if input == "no" || input == "n" {
+		fmt.Println(style.Dim.Render("Cancelled."))
+	} else {
+		fmt.Println(style.Red.Render("Invalid input. ") + "Please enter 'yes' or 'no'.")
+		ClearHistory()
+	}
 }

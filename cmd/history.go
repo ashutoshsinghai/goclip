@@ -25,6 +25,9 @@ func ListClips() {
 	for _, c := range clips {
 		printClipRow(c)
 	}
+	fmt.Println(style.Dim.Render("  → goclip copy <id>   paste an item back to clipboard"))
+	fmt.Println(style.Dim.Render("  → goclip pin <id>    keep an item at the top"))
+	fmt.Println(style.Dim.Render("  → goclip pick        browse interactively with TUI"))
 	fmt.Println()
 }
 
