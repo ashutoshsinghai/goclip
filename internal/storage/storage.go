@@ -35,7 +35,14 @@ func Load() []Clip {
 		return []Clip{}
 	}
 	var clips []Clip
-	json.Unmarshal(data, &clips)
+	if err := json.Unmarshal(data, &clips); err != nil {
+		// Return empty slice if JSON is corrupted, don't panic
+		return []Clip{}
+	}
+	// Ensure we never return nil, always an empty slice
+	if clips == nil {
+		return []Clip{}
+	}
 	return clips
 }
 

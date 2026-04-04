@@ -62,7 +62,8 @@ func main() {
 		}
 		cmd.PinClip(os.Args[2])
 	case "clear":
-		cmd.ClearHistory()
+		force := len(os.Args) > 2 && (os.Args[2] == "--force" || os.Args[2] == "-f")
+		cmd.ClearHistory(force)
 	case "upgrade":
 		cmd.Upgrade(version)
 	case "uninstall":
@@ -151,6 +152,7 @@ USAGE:
   goclip copy <id>     Copy item by ID (non-interactive)
   goclip pin <id>      Pin/unpin an item (pinned items stay at top)
   goclip clear         Wipe all history
+  goclip clear --force Skip confirmation prompt (for automation)
   goclip upgrade       Upgrade goclip to the latest version
   goclip uninstall     Remove goclip from your system
   goclip version       Show current version

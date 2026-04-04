@@ -52,7 +52,14 @@ func PinClip(idStr string) {
 }
 
 // ClearHistory wipes all saved clipboard history.
-func ClearHistory() {
+// If force is true, clears without prompting (for automation).
+func ClearHistory(force bool) {
+	if force {
+		storage.Save([]storage.Clip{})
+		fmt.Println(style.Yellow.Render("History cleared."))
+		return
+	}
+
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print(style.Yellow.Render("Are you sure? ") + "This will delete all history. (yes/no): ")
 	input, _ := reader.ReadString('\n')
@@ -65,6 +72,6 @@ func ClearHistory() {
 		fmt.Println(style.Dim.Render("Cancelled."))
 	} else {
 		fmt.Println(style.Red.Render("Invalid input. ") + "Please enter 'yes' or 'no'.")
-		ClearHistory()
+		ClearHistory(false)
 	}
 }

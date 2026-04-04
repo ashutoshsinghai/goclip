@@ -3,7 +3,9 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/atotto/clipboard"
 	tea "github.com/charmbracelet/bubbletea"
@@ -32,8 +34,10 @@ var (
 	previewStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#7B61FF")).
-			Padding(0, 1).
-			Foreground(lipgloss.Color("#DDDDDD"))
+			Padding(1, 2).
+			Foreground(lipgloss.Color("#DDDDDD")).
+			Width(70).
+			Height(6)
 
 	searchStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FFD700")).
@@ -65,11 +69,18 @@ type model struct {
 	copied     bool
 	copiedText string
 	quitting   bool
+	width      int // terminal width
+	height     int // terminal height
 }
 
 func newModel() model {
 	clips := storage.Sorted(storage.Load())
-	return model{clips: clips, filtered: clips}
+	return model{
+		clips:    clips,
+		filtered: clips,
+		width:    80,  // default terminal width
+		height:   24,  // default terminal height
+	}
 }
 
 // Init runs once on startup — nothing to do here.
@@ -80,10 +91,18 @@ func (m model) Init() tea.Cmd {
 // Update handles every keypress and returns the new model state.
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		// After copying, any key quits
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		return m, nil
+	case tea.TickMsg:
+		// Auto-quit 500ms after copying
 		if m.copied {
-			m.quitting = true
+			return m, tea.Quit
+		}
+	case tea.KeyMsg:
+		// After copying, any key quits immediately
+		if m.copied {
 			return m, tea.Quit
 		}
 		if m.searching {
@@ -112,6 +131,10 @@ func (m model) handleBrowseKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			clipboard.WriteAll(m.filtered[m.cursor].Content)
 			m.copied = true
 			m.copiedText = m.filtered[m.cursor].Content
+			// Auto-quit after 500ms
+			return m, tea.Tick(time.Duration(500)*time.Millisecond, func(t time.Time) tea.Msg {
+				return tea.TickMsg{}
+			})
 		}
 	case "/":
 		m.searching = true
@@ -198,27 +221,39 @@ func (m model) View() string {
 
 	var b strings.Builder
 
-	b.WriteString("\n  " + titleStyle.Render(" goclip — Clipboard History ") + "\n\n")
+	b.WriteString("  " + titleStyle.Render(" goclip — Clipboard History ") + "\n")
 
 	if len(m.clips) == 0 {
 		b.WriteString("  " + dimStyle.Render("No history yet. Run: goclip daemon") + "\n")
+		b.WriteString("  " + helpStyle.Render("q to quit") + "\n")
 		return b.String()
 	}
 
-	// Track whether we've crossed from pinned → unpinned to draw a divider
-	shownDivider := false
-	hasPinned := len(m.filtered) > 0 && m.filtered[0].Pinned
+	if len(m.filtered) == 0 {
+		b.WriteString("  " + dimStyle.Render("No matches found.") + "\n")
+		b.WriteString("  " + helpStyle.Render("esc clear search") + "\n")
+		return b.String()
+	}
 
-	for i, c := range m.filtered {
-		// Draw divider when pinned section ends
-		if hasPinned && !c.Pinned && !shownDivider {
-			b.WriteString("  " + dimStyle.Render("────────────────────────────────────") + "\n")
-			shownDivider = true
-		}
+	// Ensure cursor is in bounds
+	if m.cursor < 0 {
+		m.cursor = 0
+	}
+	if m.cursor >= len(m.filtered) {
+		m.cursor = len(m.filtered) - 1
+	}
 
-		preview := strings.ReplaceAll(c.Content, "\n", "↵")
-		if len(preview) > 55 {
-			preview = preview[:55] + "..."
+	// Show 12 items per page (use more terminal space)
+	pageSize := 12
+	pageStart := (m.cursor / pageSize) * pageSize
+
+	b.WriteString("\n")
+	// Render visible items
+	for i := pageStart; i < pageStart+pageSize && i < len(m.filtered); i++ {
+		c := m.filtered[i]
+		preview := strings.ReplaceAll(c.Content, "\n", " ")
+		if len(preview) > 45 {
+			preview = preview[:45] + "..."
 		}
 
 		pin := "  "
@@ -227,36 +262,27 @@ func (m model) View() string {
 		}
 
 		timeStr := dimStyle.Render(c.CopiedAt.Format("Jan 02 15:04"))
-		line := fmt.Sprintf("%s%-14s  %s", pin, timeStr, preview)
+		line := fmt.Sprintf("%s%s  %s", pin, timeStr, preview)
 
 		if i == m.cursor {
-			b.WriteString(selectedStyle.Render("▶ "+line) + "\n")
+			b.WriteString("  " + selectedStyle.Render("▶ "+line) + "\n")
 		} else {
-			b.WriteString(dimStyle.Render("  "+line) + "\n")
+			b.WriteString("  " + dimStyle.Render(line) + "\n")
 		}
 	}
 
-	if len(m.filtered) == 0 {
-		b.WriteString("  " + dimStyle.Render("No matches found.") + "\n")
-	}
-
-	// Preview box for selected item
-	if len(m.filtered) > 0 {
+	// Simple preview - just show first line
+	if m.cursor >= 0 && m.cursor < len(m.filtered) {
 		preview := m.filtered[m.cursor].Content
-		if len(preview) > 200 {
-			preview = preview[:200] + "..."
+		if len(preview) > 100 {
+			preview = preview[:100] + "..."
 		}
-		b.WriteString("\n  " + previewStyle.Render(preview) + "\n")
+		preview = strings.ReplaceAll(preview, "\n", " ↵ ")
+		b.WriteString("\n  " + dimStyle.Render("Preview: "+preview) + "\n")
 	}
 
-	// Search bar or help line
-	b.WriteString("\n  ")
-	if m.searching {
-		b.WriteString(searchStyle.Render("/ " + m.search + "█"))
-	} else {
-		b.WriteString(helpStyle.Render("↑/↓ navigate   enter copy   p pin   / search   q quit"))
-	}
-	b.WriteString("\n\n")
+	// Help
+	b.WriteString("\n  " + helpStyle.Render("↑/↓ navigate   enter copy   p pin   / search   q quit") + "\n")
 
 	return b.String()
 }
@@ -267,8 +293,13 @@ func (m model) View() string {
 
 // RunPicker opens the interactive TUI clipboard picker.
 func RunPicker() {
-	p := tea.NewProgram(newModel())
+	p := tea.NewProgram(
+		newModel(),
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+		tea.WithOutput(os.Stderr), // Use stderr for better compatibility
+	)
 	if _, err := p.Run(); err != nil {
-		fmt.Printf("Error running picker: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Picker error: %v\n", err)
 	}
 }
