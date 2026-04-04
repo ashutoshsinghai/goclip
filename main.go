@@ -29,7 +29,22 @@ func main() {
 
 	switch os.Args[1] {
 	case "daemon":
-		commands.RunDaemon()
+		if len(os.Args) < 3 {
+			commands.RunDaemon() // foreground
+			return
+		}
+		switch os.Args[2] {
+		case "start":
+			commands.StartDaemon()
+		case "stop":
+			commands.StopDaemon()
+		case "status":
+			commands.DaemonStatus()
+		default:
+			fmt.Printf("Unknown daemon subcommand: %s\n", os.Args[2])
+			fmt.Println("Usage: goclip daemon [start|stop|status]")
+			os.Exit(1)
+		}
 	case "pick", "ui":
 		ui.RunPicker()
 	case "list", "ls":
@@ -74,7 +89,10 @@ func printHelp() {
 goclip — Clipboard History Manager
 
 USAGE:
-  goclip daemon        Start watching your clipboard (keep this running)
+  goclip daemon        Start watching clipboard in foreground
+  goclip daemon start  Start daemon in background
+  goclip daemon stop   Stop background daemon
+  goclip daemon status Show whether daemon is running
   goclip pick          Open interactive TUI picker  ← the fun one
   goclip list          Show history as plain text
   goclip search <kw>   Search history by keyword
