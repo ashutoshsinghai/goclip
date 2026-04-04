@@ -18,7 +18,7 @@ func spawnBackground() (int, error) {
 		return 0, err
 	}
 
-	cmd := exec.Command(exe, "daemon")
+	cmd := exec.Command(exe, "run")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP | detachedProcess,
 		HideWindow:    true,

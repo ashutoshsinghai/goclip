@@ -17,7 +17,7 @@ func spawnBackground() (int, error) {
 		return 0, err
 	}
 
-	cmd := exec.Command(exe, "daemon")
+	cmd := exec.Command(exe, "run")
 	// Setsid detaches the process from the current terminal session
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	cmd.Stdout = logF
