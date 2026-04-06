@@ -138,7 +138,7 @@ func min3(a, b, c int) int {
 }
 
 func printHelp() {
-	fmt.Println(`
+	fmt.Print(`
 goclip — Clipboard History Manager
 
 USAGE:
