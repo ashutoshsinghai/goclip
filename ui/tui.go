@@ -181,6 +181,14 @@ func (m model) handleSearchKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.copied = true
 			m.copiedText = m.filtered[m.cursor].Content
 		}
+	case "up", "ctrl+p":
+		if m.cursor > 0 {
+			m.cursor--
+		}
+	case "down", "ctrl+n":
+		if m.cursor < len(m.filtered)-1 {
+			m.cursor++
+		}
 	case "backspace":
 		if len(m.search) > 0 {
 			m.search = m.search[:len(m.search)-1]
@@ -229,15 +237,23 @@ func (m model) View() string {
 
 	b.WriteString("  " + titleStyle.Render(" goclip — Clipboard History ") + "\n")
 
+	// Search bar — always visible when searching or a filter is active
+	if m.searching {
+		cursor := "█"
+		b.WriteString("  " + searchStyle.Render("Search: "+m.search+cursor) + "\n")
+	} else if m.search != "" {
+		b.WriteString("  " + searchStyle.Render("Filter: "+m.search) + dimStyle.Render("  (/ to edit, esc to clear)") + "\n")
+	}
+
 	if len(m.clips) == 0 {
-		b.WriteString("  " + dimStyle.Render("No history yet. Run: goclip daemon") + "\n")
+		b.WriteString("\n  " + dimStyle.Render("No history yet. Run: goclip daemon") + "\n")
 		b.WriteString("  " + helpStyle.Render("q to quit") + "\n")
 		return b.String()
 	}
 
 	if len(m.filtered) == 0 {
-		b.WriteString("  " + dimStyle.Render("No matches found.") + "\n")
-		b.WriteString("  " + helpStyle.Render("esc clear search") + "\n")
+		b.WriteString("\n  " + dimStyle.Render("No matches for "+fmt.Sprintf("%q", m.search)) + "\n")
+		b.WriteString("  " + helpStyle.Render("backspace to edit   esc to clear") + "\n")
 		return b.String()
 	}
 
@@ -277,7 +293,7 @@ func (m model) View() string {
 		}
 	}
 
-	// Simple preview - just show first line
+	// Preview of selected item
 	if m.cursor >= 0 && m.cursor < len(m.filtered) {
 		preview := m.filtered[m.cursor].Content
 		if len(preview) > 100 {
@@ -287,8 +303,12 @@ func (m model) View() string {
 		b.WriteString("\n  " + dimStyle.Render("Preview: "+preview) + "\n")
 	}
 
-	// Help
-	b.WriteString("\n  " + helpStyle.Render("↑/↓ navigate   enter copy   p pin   / search   q quit") + "\n")
+	// Help — changes based on whether search bar is active
+	if m.searching {
+		b.WriteString("\n  " + helpStyle.Render("type to filter   ↑/↓ navigate   enter copy   esc exit search") + "\n")
+	} else {
+		b.WriteString("\n  " + helpStyle.Render("↑/↓ navigate   enter copy   p pin   / search   q quit") + "\n")
+	}
 
 	return b.String()
 }
@@ -304,6 +324,27 @@ func RunPicker() {
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 		tea.WithOutput(os.Stderr), // Use stderr for better compatibility
+	)
+	if _, err := p.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Picker error: %v\n", err)
+	}
+}
+
+// RunPickerWithQuery opens the TUI picker pre-filtered to the given query.
+func RunPickerWithQuery(query string) {
+	clips := storage.Sorted(storage.Load())
+	m := model{
+		clips:    clips,
+		filtered: filterClips(clips, query),
+		search:   query,
+		width:    80,
+		height:   24,
+	}
+	p := tea.NewProgram(
+		m,
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+		tea.WithOutput(os.Stderr),
 	)
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Picker error: %v\n", err)

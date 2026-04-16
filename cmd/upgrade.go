@@ -25,38 +25,90 @@ type githubAsset struct {
 	BrowserDownloadURL string `json:"browser_download_url"`
 }
 
-// Upgrade fetches the latest release from GitHub and replaces the current binary.
+// Upgrade fetches the latest release and replaces the current binary.
 func Upgrade(currentVersion string) {
 	fmt.Println(style.Dim.Render("Checking for updates..."))
-
-	// Fetch latest release info from GitHub API
-	resp, err := http.Get("https://api.github.com/repos/" + repo + "/releases/latest")
+	release, err := fetchRelease("latest")
 	if err != nil {
-		fmt.Printf("Error reaching GitHub: %v\n", err)
+		fmt.Println(style.Red.Render("Error reaching GitHub: ") + err.Error())
 		os.Exit(1)
 	}
-	defer resp.Body.Close()
-
-	var release githubRelease
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		fmt.Println(style.Red.Render("Error reading release info: ") + err.Error())
-		os.Exit(1)
-	}
-
-	latest := release.TagName
-
-	// Compare versions
-	if currentVersion != "" && currentVersion == latest {
+	if currentVersion != "" && currentVersion == release.TagName {
 		fmt.Println(style.Green.Render("Already up to date ") + style.Dim.Render("("+currentVersion+")"))
 		return
 	}
-	fmt.Println(style.Bold.Render("Upgrading ") + style.Dim.Render(currentVersion) + style.Bold.Render(" → ") + style.Green.Render(latest))
+	fmt.Println(style.Bold.Render("Upgrading ") + style.Dim.Render(currentVersion) + style.Bold.Render(" → ") + style.Green.Render(release.TagName))
+	applyRelease(release)
+	fmt.Println(style.Green.Render("Done! goclip upgraded to ") + style.Bold.Render(release.TagName))
+}
 
-	// Detect OS and arch
-	goos := runtime.GOOS     // "darwin", "linux", "windows"
-	goarch := runtime.GOARCH // "amd64", "arm64"
+// Install downloads and installs a specific version, or the latest if "--latest" is passed.
+func Install(version, currentVersion string) {
+	// normalise: accept both "v0.5.0" and "0.5.0"
+	tag := version
+	if tag == "--latest" || tag == "latest" {
+		tag = "latest"
+	} else if !strings.HasPrefix(tag, "v") {
+		tag = "v" + tag
+	}
 
-	// Build the expected asset name (matches goreleaser output)
+	fmt.Println(style.Dim.Render("Fetching release info..."))
+	release, err := fetchRelease(tag)
+	if err != nil {
+		fmt.Println(style.Red.Render("Error: ") + err.Error())
+		os.Exit(1)
+	}
+
+	if currentVersion != "" && currentVersion == release.TagName {
+		fmt.Println(style.Green.Render("Already on ") + style.Bold.Render(release.TagName))
+		return
+	}
+
+	if tag == "latest" {
+		fmt.Println(style.Bold.Render("Installing ") + style.Dim.Render(currentVersion) + style.Bold.Render(" → ") + style.Green.Render(release.TagName))
+	} else {
+		fmt.Println(style.Bold.Render("Installing ") + style.Green.Render(release.TagName) + style.Dim.Render(" (current: "+currentVersion+")"))
+	}
+
+	applyRelease(release)
+	fmt.Println(style.Green.Render("Done! goclip is now at ") + style.Bold.Render(release.TagName))
+}
+
+// fetchRelease fetches release metadata from GitHub.
+// Pass "latest" for the latest release, or a tag like "v0.5.0" for a specific one.
+func fetchRelease(tag string) (githubRelease, error) {
+	var url string
+	if tag == "latest" {
+		url = "https://api.github.com/repos/" + repo + "/releases/latest"
+	} else {
+		url = "https://api.github.com/repos/" + repo + "/releases/tags/" + tag
+	}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return githubRelease{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return githubRelease{}, fmt.Errorf("version %q not found — check available releases at https://github.com/%s/releases", tag, repo)
+	}
+	if resp.StatusCode != 200 {
+		return githubRelease{}, fmt.Errorf("GitHub returned HTTP %d", resp.StatusCode)
+	}
+
+	var release githubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return githubRelease{}, fmt.Errorf("could not parse release info: %w", err)
+	}
+	return release, nil
+}
+
+// applyRelease downloads the right asset for the current platform and replaces the binary.
+func applyRelease(release githubRelease) {
+	goos := runtime.GOOS
+	goarch := runtime.GOARCH
+
 	var assetName string
 	if goos == "windows" {
 		assetName = fmt.Sprintf("goclip_%s_%s.zip", goos, goarch)
@@ -64,7 +116,6 @@ func Upgrade(currentVersion string) {
 		assetName = fmt.Sprintf("goclip_%s_%s.tar.gz", goos, goarch)
 	}
 
-	// Find the matching asset URL
 	downloadURL := ""
 	for _, asset := range release.Assets {
 		if asset.Name == assetName {
@@ -72,16 +123,14 @@ func Upgrade(currentVersion string) {
 			break
 		}
 	}
-
 	if downloadURL == "" {
-		fmt.Printf("No binary found for %s/%s in release %s\n", goos, goarch, latest)
+		fmt.Printf("No binary found for %s/%s in release %s\n", goos, goarch, release.TagName)
 		os.Exit(1)
 	}
 
 	fmt.Println(style.Dim.Render("Downloading " + assetName + "..."))
 
-	// Download the archive to a temp file
-	tmpDir, _ := os.MkdirTemp("", "goclip-upgrade")
+	tmpDir, _ := os.MkdirTemp("", "goclip-install")
 	defer os.RemoveAll(tmpDir)
 
 	archivePath := filepath.Join(tmpDir, assetName)
@@ -90,13 +139,12 @@ func Upgrade(currentVersion string) {
 		os.Exit(1)
 	}
 
-	// Extract the binary from the archive
 	binaryName := "goclip"
 	if goos == "windows" {
 		binaryName = "goclip.exe"
 	}
-
 	newBinaryPath := filepath.Join(tmpDir, binaryName)
+
 	if strings.HasSuffix(archivePath, ".tar.gz") {
 		if err := extractTarGz(archivePath, binaryName, newBinaryPath); err != nil {
 			fmt.Printf("Extraction failed: %v\n", err)
@@ -109,7 +157,6 @@ func Upgrade(currentVersion string) {
 		}
 	}
 
-	// Find where the current binary lives
 	currentBinary, err := os.Executable()
 	if err != nil {
 		fmt.Printf("Could not find current binary path: %v\n", err)
@@ -117,7 +164,6 @@ func Upgrade(currentVersion string) {
 	}
 	currentBinary, _ = filepath.EvalSymlinks(currentBinary)
 
-	// Replace: write new binary next to the old one, then rename over it
 	tmpBinary := currentBinary + ".new"
 	if err := copyFile(newBinaryPath, tmpBinary); err != nil {
 		fmt.Printf("Could not write new binary: %v\n", err)
@@ -130,8 +176,6 @@ func Upgrade(currentVersion string) {
 		os.Remove(tmpBinary)
 		os.Exit(1)
 	}
-
-	fmt.Println(style.Green.Render("Done! goclip upgraded to ") + style.Bold.Render(latest))
 }
 
 // downloadFile downloads a URL to a local file.

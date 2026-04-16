@@ -107,6 +107,40 @@ else
 fi
 
 echo ""
-echo "👉 Try running:"
-echo "   ${BINARY} help"
+
+# Linux: remind about clipboard dependencies
+if [ "$OS" = "linux" ]; then
+  echo "📋 Linux clipboard note:"
+  echo "   goclip needs xclip, xsel, or wl-clipboard to read your clipboard."
+  echo "   Install one if you haven't already:"
+  echo "     sudo apt install xclip       # X11"
+  echo "     sudo apt install wl-clipboard # Wayland"
+  echo ""
+fi
+
+echo "💡 goclip needs a background daemon to capture clipboard history."
+echo "   Without it, goclip pick will show nothing."
+echo ""
+
+# Only prompt if stdin is a real terminal (not curl | sh pipe)
+if [ -t 0 ] && command -v "$BINARY" >/dev/null 2>&1; then
+  printf "Start the daemon now? [Y/n] "
+  read answer </dev/tty
+  case "$answer" in
+    [nN]*)
+      echo ""
+      echo "   Start it later with: goclip daemon"
+      ;;
+    *)
+      "$BINARY" daemon
+      ;;
+  esac
+else
+  echo "👉 Run this to start capturing clipboard history:"
+  echo "   ${BINARY} daemon"
+fi
+
+echo ""
+echo "👉 Then open the picker with:"
+echo "   ${BINARY} pick"
 echo ""

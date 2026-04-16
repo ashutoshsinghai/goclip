@@ -83,6 +83,13 @@ func main() {
 		cmd.ClearHistory(force)
 	case "upgrade":
 		cmd.Upgrade(version)
+	case "install":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: goclip install <version>  or  goclip install --latest")
+			fmt.Println("Example: goclip install v0.5.0")
+			os.Exit(1)
+		}
+		cmd.Install(os.Args[2], version)
 	case "uninstall":
 		cmd.Uninstall()
 	case "version", "--version", "-v":
@@ -105,7 +112,7 @@ func main() {
 var known = []string{
 	"daemon", "stop", "status", "run", "pick", "tray",
 	"list", "search", "copy", "pin", "clear",
-	"upgrade", "uninstall", "version", "help",
+	"upgrade", "install", "uninstall", "version", "help",
 }
 
 // suggest returns the closest known command to input, or "" if nothing is close.
@@ -173,7 +180,9 @@ USAGE:
   goclip pin <id>      Pin/unpin an item (pinned items stay at top)
   goclip clear         Wipe all history
   goclip clear --force Skip confirmation prompt (for automation)
-  goclip upgrade       Upgrade goclip to the latest version
+  goclip upgrade            Upgrade goclip to the latest version
+  goclip install <version>  Install a specific version (e.g. v0.5.0)
+  goclip install --latest   Same as upgrade
   goclip uninstall     Remove goclip from your system
   goclip version       Show current version
 

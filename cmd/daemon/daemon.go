@@ -29,12 +29,33 @@ func daemonLogFile() string {
 // Stdout goes to the terminal (or to the log file when started via `daemon start`).
 func RunDaemon() {
 	fmt.Println("goclip daemon running — watching your clipboard (Ctrl+C to stop)")
+
+	// Startup check: verify clipboard is accessible before entering the loop.
+	// On Linux this fails if xclip/xsel/wl-clipboard is missing or DISPLAY is unset.
+	if _, err := clipboard.ReadAll(); err != nil {
+		fmt.Fprintln(os.Stderr, "Error: clipboard not accessible:", err)
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "On Linux, install a clipboard utility and ensure DISPLAY is set:")
+		fmt.Fprintln(os.Stderr, "  sudo apt install xclip        # X11")
+		fmt.Fprintln(os.Stderr, "  sudo apt install wl-clipboard # Wayland")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "If connecting via SSH, use: ssh -X user@host")
+		os.Exit(1)
+	}
+
 	clips := storage.Load()
 	last := ""
+	var lastErrTime time.Time
 
 	for {
 		text, err := clipboard.ReadAll()
-		if err == nil && text != "" && text != last {
+		if err != nil {
+			// Log at most once per minute to avoid flooding the log file.
+			if time.Since(lastErrTime) > time.Minute {
+				fmt.Fprintln(os.Stderr, "[error] clipboard read failed:", err)
+				lastErrTime = time.Now()
+			}
+		} else if text != "" && text != last {
 			last = text
 			clips = storage.AddClip(text, clips)
 			storage.Save(clips)

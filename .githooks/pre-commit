@@ -1,0 +1,9 @@
+#!/bin/sh
+# Pre-commit hook: ensure the project builds before committing.
+echo "go build ./..."
+cd "$(git rev-parse --show-toplevel)"
+if ! go build ./...; then
+  echo ""
+  echo "Build failed — commit aborted. Fix the errors above and try again."
+  exit 1
+fi
