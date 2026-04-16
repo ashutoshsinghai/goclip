@@ -16,6 +16,7 @@ import (
 
 	"github.com/ashutoshsinghai/goclip/cmd"
 	"github.com/ashutoshsinghai/goclip/cmd/daemon"
+	"github.com/ashutoshsinghai/goclip/cmd/tray"
 	"github.com/ashutoshsinghai/goclip/internal/style"
 	"github.com/ashutoshsinghai/goclip/ui"
 )
@@ -39,6 +40,22 @@ func main() {
 		daemon.StopDaemon()
 	case "status":
 		daemon.DaemonStatus()
+	case "tray":
+		if len(os.Args) > 2 {
+			switch os.Args[2] {
+			case "stop":
+				tray.StopTray()
+			case "status":
+				tray.TrayStatus()
+			default:
+				fmt.Printf("Unknown tray subcommand %q. Usage: goclip tray [stop|status]\n", os.Args[2])
+				os.Exit(1)
+			}
+		} else {
+			tray.StartTray()
+		}
+	case "tray-run": // internal — spawned by StartTray, not listed in help
+		tray.Run()
 	case "pick", "ui":
 		ui.RunPicker()
 	case "list", "ls":
@@ -48,7 +65,7 @@ func main() {
 			fmt.Println("Usage: goclip search <keyword>")
 			os.Exit(1)
 		}
-		cmd.SearchClips(strings.Join(os.Args[2:], " "))
+		ui.RunPickerWithQuery(strings.Join(os.Args[2:], " "))
 	case "copy", "get":
 		if len(os.Args) < 3 {
 			fmt.Println("Usage: goclip copy <id>")
@@ -86,7 +103,7 @@ func main() {
 
 // known is the full list of valid commands used for fuzzy suggestion.
 var known = []string{
-	"daemon", "stop", "status", "run", "pick",
+	"daemon", "stop", "status", "run", "pick", "tray",
 	"list", "search", "copy", "pin", "clear",
 	"upgrade", "uninstall", "version", "help",
 }
@@ -142,6 +159,9 @@ func printHelp() {
 goclip — Clipboard History Manager
 
 USAGE:
+  goclip tray          Start menu bar / system tray app in background
+  goclip tray stop     Stop the tray app
+  goclip tray status   Show whether the tray app is running
   goclip daemon        Start clipboard watcher in background
   goclip stop          Stop background daemon
   goclip status        Show whether daemon is running
