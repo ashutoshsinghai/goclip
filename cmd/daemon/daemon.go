@@ -20,7 +20,9 @@ func pidFile() string {
 
 func daemonLogFile() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".goclip", "daemon.log")
+	dir := filepath.Join(home, ".goclip")
+	os.MkdirAll(dir, 0755)
+	return filepath.Join(dir, "daemon.log")
 }
 
 // RunDaemon runs the clipboard watcher in the foreground.
