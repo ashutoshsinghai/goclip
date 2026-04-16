@@ -7,6 +7,7 @@ Run a background daemon to capture everything you copy, then recall any entry in
 ## Features
 
 - **Daemon** — polls the clipboard every 500ms and persists entries to `~/.goclip/history.json`
+- **Menu bar / system tray** — native macOS menu bar app with history grouped by date; shows timestamps, fires a notification on copy, updates instantly via file-watch
 - **Interactive TUI** — scrollable picker with live search and pin support, built with [Bubbletea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss)
 - **Pin items** — keep important clips at the top of your history
 - **Non-interactive CLI** — `list`, `copy <id>`, `pin <id>`, `clear` for scripting
@@ -84,7 +85,10 @@ go install github.com/ashutoshsinghai/goclip@latest
 # 1. Start the daemon in the background
 goclip daemon
 
-# 2. Open the interactive picker whenever you need an old clip
+# 2a. Open the menu bar app — lives in your menu bar, always one click away
+goclip tray
+
+# 2b. Or open the interactive TUI picker in the terminal
 goclip pick
 ```
 
@@ -96,6 +100,9 @@ goclip pick
 | `goclip stop` | Stop background daemon |
 | `goclip status` | Show whether daemon is running |
 | `goclip run` | Run clipboard watcher in foreground |
+| `goclip tray` | Start menu bar / system tray app in background |
+| `goclip tray stop` | Stop the tray app |
+| `goclip tray status` | Show whether the tray app is running |
 | `goclip pick` | Open the interactive TUI picker |
 | `goclip list` | Print history as a plain text table |
 | `goclip search <keyword>` | Search history by keyword |
@@ -106,6 +113,28 @@ goclip pick
 | `goclip uninstall` | Remove goclip from your system |
 | `goclip version` | Show current version |
 | `goclip help` | Show usage |
+
+### Menu bar app (macOS & Windows)
+
+`goclip tray` puts a clipboard icon in your menu bar. History is grouped by date — hover over a group to see its entries, click any entry to copy it instantly.
+
+```
+📌 Pinned  (2)    →  3:04 PM  ·  My SSH key
+                     2:51 PM  ·  SELECT * FROM users…
+Today  (8)        →  4:12 PM  ·  Hello world
+                     3:58 PM  ·  npm install --save-dev
+                     … and 6 more
+Yesterday  (3)    →  Apr 2  11:03 AM  ·  git commit -m "fix:…
+────────────────────────────────
+🔍  Open Picker…          ← full TUI search in a terminal window
+────────────────────────────────
+Quit goclip tray
+```
+
+- Up to **20 entries per date group**; overflow shows `… and N more` which opens the full picker
+- **macOS notification** fired on every copy
+- Menu updates **instantly** when the daemon captures a new clip (file-watch, no polling delay)
+- Survives terminal close; stop it with `goclip tray stop`
 
 ### TUI keybindings
 
@@ -246,6 +275,15 @@ goclip/
 │   │   ├── daemon.go          # run, daemon, stop, status
 │   │   ├── daemon_unix.go     # background process (macOS/Linux)
 │   │   └── daemon_windows.go  # background process (Windows)
+│   ├── tray/
+│   │   ├── tray.go            # menu bar UI, start/stop/status, date grouping
+│   │   ├── tray_unix.go       # spawn/kill tray process (macOS/Linux)
+│   │   ├── tray_windows.go    # spawn/kill tray process (Windows)
+│   │   ├── notify_darwin.go   # macOS notification via osascript + open picker
+│   │   ├── notify_windows.go  # Windows toast notification + open picker
+│   │   ├── notify_other.go    # no-op stubs for other platforms
+│   │   ├── signal_unix.go     # ignore SIGHUP so tray survives terminal close
+│   │   └── signal_windows.go  # no-op on Windows
 │   ├── history.go             # list, search
 │   ├── clip.go                # copy, pin, clear
 │   ├── upgrade.go             # self-upgrade from GitHub Releases
