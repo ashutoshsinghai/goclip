@@ -10,7 +10,6 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Tag}}
     goos:
-      - darwin
       - linux
       - windows
     goarch:

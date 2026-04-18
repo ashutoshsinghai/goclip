@@ -9,6 +9,8 @@ permissions:
   contents: write
 
 jobs:
+  # Builds linux + windows with CGO_ENABLED=0 (no CGo deps on these platforms).
+  # Also creates the GitHub release object and release notes.
   release:
     runs-on: ubuntu-latest
     steps:
@@ -25,5 +27,37 @@ jobs:
           distribution: goreleaser
           version: latest
           args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Builds darwin binaries on a real macOS runner so CGo (AppKit / systray) works.
+  # Uploads the archives to the release created by the job above.
+  release-darwin:
+    runs-on: macos-latest
+    needs: release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: 'stable'
+
+      - name: Build darwin binaries
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          LDFLAGS="-s -w -X main.version=${VERSION}"
+          mkdir -p dist/darwin_amd64 dist/darwin_arm64
+
+          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/darwin_amd64/goclip .
+          CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/darwin_arm64/goclip .
+
+          tar -czf dist/goclip_darwin_amd64.tar.gz -C dist/darwin_amd64 goclip
+          tar -czf dist/goclip_darwin_arm64.tar.gz -C dist/darwin_arm64 goclip
+
+      - name: Upload darwin archives to release
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" \
+            dist/goclip_darwin_amd64.tar.gz \
+            dist/goclip_darwin_arm64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
