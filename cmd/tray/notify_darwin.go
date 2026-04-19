@@ -16,6 +16,7 @@ func notifyCopied(preview string) {
 }
 
 // openPicker opens a new Terminal window running the interactive TUI picker.
+// A native macOS GUI picker is a future improvement.
 func openPicker() {
 	exe := goclipExe()
 	exec.Command("osascript",

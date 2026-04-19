@@ -11,7 +11,7 @@ import (
 // spawnTray launches "goclip tray-run" as a detached background process.
 // stdout/stderr go to the tray log file.
 func spawnTray() (int, error) {
-	exe, _ := os.Executable()
+	exe := goclipExe()
 	logF, err := os.OpenFile(trayLogFile(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return 0, err

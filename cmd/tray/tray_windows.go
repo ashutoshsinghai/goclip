@@ -12,7 +12,7 @@ const detachedProcess = 0x00000008
 
 // spawnTray launches "goclip tray-run" as a hidden background process on Windows.
 func spawnTray() (int, error) {
-	exe, _ := os.Executable()
+	exe := goclipExe()
 	logF, err := os.OpenFile(trayLogFile(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return 0, err

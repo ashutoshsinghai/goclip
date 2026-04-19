@@ -171,11 +171,32 @@ func applyRelease(release githubRelease) {
 	}
 	os.Chmod(tmpBinary, 0755)
 
-	if err := os.Rename(tmpBinary, currentBinary); err != nil {
-		fmt.Printf("Could not replace binary (try with sudo): %v\n", err)
+	if err := replaceBinary(tmpBinary, currentBinary); err != nil {
+		fmt.Printf("Could not replace binary: %v\n", err)
 		os.Remove(tmpBinary)
 		os.Exit(1)
 	}
+}
+
+// replaceBinary swaps tmpBinary into place as dest.
+// On Windows, the running executable can't be overwritten directly, so we
+// rename it to a .old file first, then rename the new binary into place.
+func replaceBinary(src, dest string) error {
+	if runtime.GOOS != "windows" {
+		return os.Rename(src, dest)
+	}
+	old := dest + ".old"
+	os.Remove(old) // remove any leftover from a previous install
+	if err := os.Rename(dest, old); err != nil {
+		return err
+	}
+	if err := os.Rename(src, dest); err != nil {
+		// best-effort rollback
+		os.Rename(old, dest)
+		return err
+	}
+	os.Remove(old)
+	return nil
 }
 
 // downloadFile downloads a URL to a local file.

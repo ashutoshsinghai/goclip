@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
-
 )
 
 // Uninstall removes the goclip binary and optionally the history directory.
 func Uninstall() {
-	// Find where this binary lives
 	binaryPath, err := os.Executable()
 	if err != nil {
 		fmt.Printf("Could not find binary path: %v\n", err)
@@ -29,10 +29,8 @@ func Uninstall() {
 	fmt.Printf("  History: %s\n", historyDir)
 	fmt.Println()
 
-	// Ask about history
 	removeHistory := confirm("Also delete your clipboard history? [y/N]: ", false)
 
-	// Final confirmation
 	if !confirm("Proceed with uninstall? [y/N]: ", false) {
 		fmt.Println("Aborted.")
 		return
@@ -46,9 +44,8 @@ func Uninstall() {
 		}
 	}
 
-	// Remove the binary last — once this runs, we're gone
-	if err := os.Remove(binaryPath); err != nil {
-		fmt.Printf("Could not remove binary (try with sudo): %v\n", err)
+	if err := removeBinary(binaryPath); err != nil {
+		fmt.Printf("Could not remove binary: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -56,8 +53,26 @@ func Uninstall() {
 	fmt.Println("goclip uninstalled. Goodbye!")
 }
 
+// removeBinary deletes the running binary. On Windows the process holds a lock
+// on its own .exe, so we drop a batch script that deletes it after we exit.
+func removeBinary(binaryPath string) error {
+	if runtime.GOOS != "windows" {
+		return os.Remove(binaryPath)
+	}
+
+	bat, err := os.CreateTemp("", "goclip-uninstall-*.bat")
+	if err != nil {
+		return err
+	}
+	batPath := bat.Name()
+	fmt.Fprintf(bat, "@echo off\r\n:loop\r\ndel /f /q %q\r\nif exist %q goto loop\r\ndel /f /q %%~f0\r\n", binaryPath, binaryPath)
+	bat.Close()
+
+	cmd := exec.Command("cmd", "/c", "start", "/min", "", batPath)
+	return cmd.Start()
+}
+
 // confirm prints a prompt and returns true if the user types "y" or "yes".
-// defaultYes controls what Enter alone means.
 func confirm(prompt string, defaultYes bool) bool {
 	fmt.Print(prompt)
 	reader := bufio.NewReader(os.Stdin)

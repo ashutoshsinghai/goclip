@@ -17,11 +17,7 @@
 package tray
 
 import (
-	"bytes"
 	"fmt"
-	"image"
-	"image/color"
-	"image/png"
 	"strings"
 	"sync"
 	"time"
@@ -313,33 +309,3 @@ func timeLabel(c storage.Clip, k bucketKey) string {
 	}
 }
 
-// ── Icon ─────────────────────────────────────────────────────────────────────
-
-func clipboardIcon() []byte {
-	const size = 22
-	img := image.NewNRGBA(image.Rect(0, 0, size, size))
-
-	black := color.NRGBA{R: 0, G: 0, B: 0, A: 255}
-	clear := color.NRGBA{}
-
-	fill := func(c color.NRGBA, x1, y1, x2, y2 int) {
-		for x := x1; x <= x2; x++ {
-			for y := y1; y <= y2; y++ {
-				if x >= 0 && x < size && y >= 0 && y < size {
-					img.SetNRGBA(x, y, c)
-				}
-			}
-		}
-	}
-
-	fill(black, 7, 1, 14, 5) // clip outer
-	fill(clear, 9, 2, 12, 4) // clip inner hole
-	fill(black, 2, 4, 19, 20) // body
-	fill(clear, 5, 8, 16, 9)   // text line 1
-	fill(clear, 5, 11, 16, 12) // text line 2
-	fill(clear, 5, 14, 12, 15) // text line 3 (shorter)
-
-	var buf bytes.Buffer
-	png.Encode(&buf, img) //nolint:errcheck
-	return buf.Bytes()
-}
