@@ -1,4 +1,4 @@
-//go:build darwin
+//go:build darwin || windows
 
 // Package tray implements a system tray / menu bar app for goclip.
 //
