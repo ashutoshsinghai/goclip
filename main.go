@@ -26,6 +26,13 @@ import (
 var version = "dev"
 
 func main() {
+	// First-run setup runs once, before any command. It installs the autostart
+	// login entry the very first time goclip is invoked, so users never have to
+	// remember to run `goclip daemon` again after a reboot. Skipped for purely
+	// informational commands (version/help) where the user hasn't shown intent
+	// to actually use goclip yet.
+	maybeFirstRunSetup()
+
 	if len(os.Args) < 2 {
 		ui.RunPicker()
 		return
@@ -34,6 +41,8 @@ func main() {
 	switch os.Args[1] {
 	case "run":
 		daemon.RunDaemon()
+	case "start":
+		cmd.Start()
 	case "daemon":
 		daemon.StartDaemon()
 	case "stop":
@@ -92,6 +101,12 @@ func main() {
 		cmd.Install(os.Args[2], version)
 	case "uninstall":
 		cmd.Uninstall()
+	case "autostart":
+		sub := ""
+		if len(os.Args) > 2 {
+			sub = os.Args[2]
+		}
+		cmd.Autostart(sub)
 	case "version", "--version", "-v":
 		fmt.Println("goclip", version)
 	case "help", "--help", "-h":
@@ -110,9 +125,9 @@ func main() {
 
 // known is the full list of valid commands used for fuzzy suggestion.
 var known = []string{
-	"daemon", "stop", "status", "run", "pick", "tray",
+	"daemon", "stop", "status", "run", "start", "pick", "tray",
 	"list", "search", "copy", "pin", "clear",
-	"upgrade", "install", "uninstall", "version", "help",
+	"upgrade", "install", "uninstall", "autostart", "version", "help",
 }
 
 // suggest returns the closest known command to input, or "" if nothing is close.
@@ -166,6 +181,7 @@ func printHelp() {
 goclip — Clipboard History Manager
 
 USAGE:
+  goclip start         Start daemon + tray (the usual way to run goclip)
   goclip tray          Start menu bar / system tray app in background
   goclip tray stop     Stop the tray app
   goclip tray status   Show whether the tray app is running
@@ -184,10 +200,13 @@ USAGE:
   goclip install <version>  Install a specific version (e.g. v0.5.0)
   goclip install --latest   Same as upgrade
   goclip uninstall     Remove goclip from your system
+  goclip autostart on  Start goclip automatically at login (default after install)
+  goclip autostart off Don't start at login
+  goclip autostart     Show whether autostart is enabled
   goclip version       Show current version
 
 TYPICAL WORKFLOW:
-  1. goclip daemon     # start in background
+  1. goclip start      # starts the clipboard watcher + tray (auto-runs on login)
   2. goclip pick       # open picker whenever you need an old clip
 `)
 }

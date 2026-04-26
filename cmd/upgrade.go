@@ -72,6 +72,24 @@ func Install(version, currentVersion string) {
 
 	applyRelease(release)
 	fmt.Println(style.Green.Render("Done! goclip is now at ") + style.Bold.Render(release.TagName))
+
+	// On a fresh install (current binary version was empty/dev), offer to start
+	// goclip right away — the daemon needs to be running to capture clips.
+	// On an upgrade we skip the prompt: goclip is presumably already running.
+	if currentVersion == "" || currentVersion == "dev" {
+		offerStart()
+	}
+}
+
+// offerStart prompts the user to start goclip immediately. Used after a fresh
+// install. If the user declines, autostart still kicks in at next login.
+func offerStart() {
+	fmt.Println()
+	if !confirm("Start goclip now? [Y/n]: ", true) {
+		fmt.Println(style.Dim.Render("  You can start it any time with: goclip start"))
+		return
+	}
+	Start()
 }
 
 // fetchRelease fetches release metadata from GitHub.

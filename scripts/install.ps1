@@ -56,4 +56,26 @@ if ($currentPath -notlike "*$INSTALL_DIR*") {
 }
 
 Write-Host ""
-Write-Host "Done! Run: goclip help" -ForegroundColor Green
+Write-Host "Done! goclip is installed." -ForegroundColor Green
+Write-Host "It will also be set to start automatically at login." -ForegroundColor Green
+Write-Host ""
+
+# Prompt the user to start goclip now. Read-Host works under `irm | iex`
+# because PowerShell connects it to the host console rather than the input
+# stream. If we're running non-interactively (no host UI), Read-Host throws —
+# in that case fall back to printing manual instructions.
+$BINARY_PATH = Join-Path $INSTALL_DIR $BINARY
+try {
+    $answer = Read-Host "Start goclip now? [Y/n]"
+    if ($answer -match '^[nN]') {
+        Write-Host "  Start it later with: goclip start" -ForegroundColor DarkGray
+    } else {
+        & $BINARY_PATH start
+    }
+} catch {
+    Write-Host "Run this to start capturing clipboard history:" -ForegroundColor Yellow
+    Write-Host "  goclip start"
+}
+
+Write-Host ""
+Write-Host "Then open the picker with: goclip pick"

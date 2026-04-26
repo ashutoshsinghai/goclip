@@ -8,6 +8,10 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/ashutoshsinghai/goclip/cmd/daemon"
+	"github.com/ashutoshsinghai/goclip/cmd/tray"
+	"github.com/ashutoshsinghai/goclip/internal/autostart"
 )
 
 // Uninstall removes the goclip binary and optionally the history directory.
@@ -34,6 +38,15 @@ func Uninstall() {
 	if !confirm("Proceed with uninstall? [y/N]: ", false) {
 		fmt.Println("Aborted.")
 		return
+	}
+
+	// Stop the tray first so the menu bar / system tray icon disappears
+	// immediately — otherwise it lingers as a dead icon until next reboot.
+	tray.StopTray()
+	daemon.StopDaemon()
+
+	if err := autostart.Disable(); err != nil {
+		fmt.Printf("Warning: could not remove autostart entry: %v\n", err)
 	}
 
 	if removeHistory {

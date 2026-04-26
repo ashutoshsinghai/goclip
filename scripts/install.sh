@@ -77,7 +77,7 @@ if [ -w "$INSTALL_DIR" ]; then
   install_binary "$INSTALL_DIR"
 else
   echo "🔐 Trying sudo install to $INSTALL_DIR..."
-  if sudo mv "${TMP}/${BINARY}" "${INSTALL_DIR}/${BINARY}" 2>/dev/null; then
+  if sudo install -d "$INSTALL_DIR" && sudo mv "${TMP}/${BINARY}" "${INSTALL_DIR}/${BINARY}"; then
     :
   else
     echo "⚠️ Falling back to user install..."
@@ -119,25 +119,27 @@ if [ "$OS" = "linux" ]; then
 fi
 
 echo "💡 goclip needs a background daemon to capture clipboard history."
-echo "   Without it, goclip pick will show nothing."
+echo "   It will also be set to start automatically at login."
 echo ""
 
-# Only prompt if stdin is a real terminal (not curl | sh pipe)
-if [ -t 0 ] && command -v "$BINARY" >/dev/null 2>&1; then
-  printf "Start the daemon now? [Y/n] "
-  read answer </dev/tty
+# Read from /dev/tty directly so the prompt works under `curl … | sh` (where
+# stdin is the pipe, not a terminal). If /dev/tty isn't available — typically
+# in CI — we skip the prompt and just print the manual instructions.
+if command -v "$BINARY" >/dev/null 2>&1 && [ -r /dev/tty ]; then
+  printf "Start goclip now? [Y/n] "
+  read answer </dev/tty || answer=""
   case "$answer" in
     [nN]*)
       echo ""
-      echo "   Start it later with: goclip daemon"
+      echo "   Start it later with: goclip start"
       ;;
     *)
-      "$BINARY" daemon
+      "$BINARY" start
       ;;
   esac
 else
   echo "👉 Run this to start capturing clipboard history:"
-  echo "   ${BINARY} daemon"
+  echo "   ${BINARY} start"
 fi
 
 echo ""
