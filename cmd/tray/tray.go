@@ -18,6 +18,7 @@ package tray
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -29,9 +30,10 @@ import (
 )
 
 const (
-	maxPinnedSlots   = 5
-	maxSlotsPerGroup = 20
-	refreshInterval  = time.Second
+	maxPinnedSlots         = 5
+	maxSlotsPerGroup       = 20
+	refreshInterval        = time.Second
+	windowsBoundaryRefresh = 5 * time.Minute
 )
 
 func traySupported() bool { return true }
@@ -206,6 +208,27 @@ func onReady() {
 
 	refresh()
 	go watchHistory()
+	go watchBoundary()
+}
+
+// watchBoundary re-buckets clips when the day rolls over.
+// On macOS, fyne/systray emits TrayOpenedCh on every menu open — refreshing
+// then is enough and costs nothing while idle. On Windows the library never
+// signals menu opens, so we fall back to a slow ticker.
+func watchBoundary() {
+	go func() {
+		for range systray.TrayOpenedCh {
+			refresh()
+		}
+	}()
+
+	if runtime.GOOS == "windows" {
+		ticker := time.NewTicker(windowsBoundaryRefresh)
+		defer ticker.Stop()
+		for range ticker.C {
+			refresh()
+		}
+	}
 }
 
 // watchHistory watches history.json and calls refresh whenever it changes.
